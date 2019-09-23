@@ -18,7 +18,6 @@
 
 //TODO: Doxygen struct detailed definition?
 //TODO: Check compiler's bitfield implementation.
-//TODO: Make TXB and RXB Symmetric. They only differ in reserved bits...
 
 #ifndef CAN_MCP25625_MCP25625_DRIVER_H_
 #define CAN_MCP25625_MCP25625_DRIVER_H_
@@ -31,10 +30,6 @@
  * @brief MCP25625 SPI Instructions.
  * @details Instruction Bytes for all operations
  */
-
-//// INSTRUCTIONS
-
-
 typedef enum {
 
     MCP_RESET				= 0xC0,	///< Resets the internal registers to
@@ -52,7 +47,7 @@ typedef enum {
 									///		overhead of a normal WRITE command by placing
 									///		the Address Pointer at one of six locations, as
 									///		indicated by ‘abc’. (0100 0abc)
-	MCP_RTS					= 0x80,	///< Inst	ructs the controller to begin the message
+	MCP_RTS 				= 0x80,	///< Inst	ructs the controller to begin the message
 									///		transmission sequence for any of the transmit
 									///		buffers. 1000 0nnn -> nnn=(TXB2,TXB1,TXB0)
 	MCP_READ_STATUS			= 0xA0,	///< Quick polling command that reads several Status
@@ -75,8 +70,6 @@ typedef enum {
     TXB1	=	1,					///< Transmit buffer TXB1
     TXB2	=	2					///< Transmit buffer TXB2
 }mcp25625_txb_t;
-
-
 
 /******************************************************************************
  * BFPCTRL: !RxnBF PIN CONTROL AND STATUS REGISTER
@@ -123,7 +116,7 @@ typedef union
 		uint8_t b1bfs		:1;		///< Rx1BF Pin State bit\n
 		//!< Reads as ‘0’ when Rx1BF is configured as an interrupt.
 		//!<
-		uint8_t			:2;		///< Unimplemented
+		uint8_t				:2;		///< Unimplemented
 		//!< Read as ‘0’
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
@@ -141,7 +134,7 @@ typedef enum
 {
 	B0RTSM	=	0x01,			///< !Tx0RTS Pin mode bit Mask
 	B1RTSM	=	0x02,			///< !Tx1RTS Pin mode bit Mask
-	B2RTSM	=	0x04, 			///< !Tx2RTS Pin mode bit Mask
+	B2RTSM	=	0x04,			///< !Tx2RTS Pin mode bit Mask
 	B0RTS	=	0x08,			///< !Tx0RTS Pin State bit Mask
 	B1RTS	=	0x10,			///< !Tx1RTS Pin State bit Mask
 	B2RTS	=	0x20			///< !Tx2RTS Pin State bit Mask
@@ -174,7 +167,7 @@ typedef union
 		uint8_t b2rts		:1;			///< !Tx2RTS Pin State\n
 		//!< - Reads state of Tx2RTS pin when in Digital Input mode\n
 		//!< - Reads as ‘0’ when pin is in ‘Request-to-Send’ mode.
-		uint8_t			:2;			///< Unimplemented\n
+		uint8_t				:2;			///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
@@ -190,14 +183,14 @@ typedef union
  */
 typedef enum
 {
-	ICOD	=	0x0E,			///<  Operation Mode bits Mask
-	ICOD_0	=	0x02,			///<  Operation Mode bit 0 Mask
-	ICOD_1	=	0x04,			///<  Operation Mode bit 1 Mask
-	ICOD_2	=	0x08,			///<  Operation Mode bit 2 Mask
-	OPMOD	=	0xE0,			///<  Interrupt Flag Code bits Mask
-	OPMOD_0	=	0x20,			///<  Interrupt Flag Code bit 0 Mask
-	OPMOD_1	=	0x40,			///<  Interrupt Flag Code bit 1 Mask
-	OPMOD_2	=	0x80,			///<  Interrupt Flag Code bit 2 Mask
+	ICOD	=	0x0E,			///< Operation Mode bits Mask
+	ICOD_0	=	0x02,			///< Operation Mode bit 0 Mask
+	ICOD_1	=	0x04,			///< Operation Mode bit 1 Mask
+	ICOD_2	=	0x08,			///< Operation Mode bit 2 Mask
+	OPMOD	=	0xE0,			///< Interrupt Flag Code bits Mask
+	OPMOD_0	=	0x20,			///< Interrupt Flag Code bit 0 Mask
+	OPMOD_1	=	0x40,			///< Interrupt Flag Code bit 1 Mask
+	OPMOD_2	=	0x80,			///< Interrupt Flag Code bit 2 Mask
 }mcp25625_canstat_mask_t;
 
 /**
@@ -206,14 +199,14 @@ typedef enum
  */
 typedef enum
 {
-	NO_INTERRUPT 		= 0x00,		///<  No Interrupt
-	ERROR_INTERRUPT		= 0x01,		///<  Error interrupt
-	WAKE_UP_INTERRUPT	= 0x02,		///<  Wake-up interrupt
-	TXB0_INTERRUPT		= 0x03,		///<  TXB0 interrupt
-	TXB1_INTERRUPT		= 0x04,		///<  TXB1 interrupt
-	TXB2_INTERRUPT		= 0x05,		///<  TXB2 interrupt
-	RXB0_INTERRUPT		= 0x06,		///<  RXB0 interrupt
-	RXB1_INTERRUPT		= 0x07		///<  RXB1 interrupt
+	NO_INTERRUPT 		= 0x00,		///< No Interrupt
+	ERROR_INTERRUPT		= 0x01,		///< Error interrupt
+	WAKE_UP_INTERRUPT	= 0x02,		///< Wake-up interrupt
+	TXB0_INTERRUPT		= 0x03,		///< TXB0 interrupt
+	TXB1_INTERRUPT		= 0x04,		///< TXB1 interrupt
+	TXB2_INTERRUPT		= 0x05,		///< TXB2 interrupt
+	RXB0_INTERRUPT		= 0x06,		///< RXB0 interrupt
+	RXB1_INTERRUPT		= 0x07		///< RXB1 interrupt
 }mcp25625_icod_t;
 
 /**
@@ -246,7 +239,7 @@ typedef union
 		uint8_t						:1;		///< Unimplemented
 		//!< Read as ‘0’
 		//!<
-		mcp25625_opmode_t	opmode	:3;		///< Operation Mode
+		mcp25625_opmode_t opmode	:3;		///< Operation Mode
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
 }mcp25625_canstat_t;
@@ -294,19 +287,19 @@ typedef union
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		mcp25625_prescaler_t clkpre	:3;		///< CLKOUT Pin Prescaler.
+		mcp25625_prescaler_t clkpre		:3;		///< CLKOUT Pin Prescaler.
 		//!<
 		//!<
 		uint8_t clken					:1;		///< CLKOUT Pin Enable\n
 		//!< 1 = CLKOUT pin is enabled\n
 		//!< 0 = CLKOUT pin is disabled (pin is in a high-impedance state).
-		uint8_t osm					:1;		///< One-Shot Mode\n
+		uint8_t osm						:1;		///< One-Shot Mode\n
 		//!< 1 = Enabled: Message will only attempt to transmit one time\n
 		//!< 0 = Disabled: Messages will reattempt transmission if required.
 		uint8_t abat					:1;		///< Abort All Pending Transmissions\n
 		//!< 1 = Requests abort of all pending transmit buffers\n
 		//!< 0 =Terminates request to abort all transmission.
-		mcp25625_opmode_t	reqop	:3;		///< Request Operation mode.
+		mcp25625_opmode_t	reqop		:3;		///< Request Operation mode.
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
 }mcp25625_canctrl_t;
@@ -314,8 +307,7 @@ typedef union
 /******************************************************************************
  * TEC: Transmit Error Counter	/	REC: Receive Error Counter
  ******************************************************************************/
-
-typedef uint8_t	mcp25625_ec_t;	///< TEC / REC : Transmit / Receive Error Counter
+//Just counters, no need to define them.
 
 /******************************************************************************
  * CNF3: CONFIGURATION 3 REGISTER
@@ -344,16 +336,16 @@ typedef union
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		uint8_t	phseg2		:3;		///< PS2 Length\n
+		uint8_t	phseg2				:3;		///< PS2 Length\n
 		//!< (PHSEG2 + 1) x TQ\n\n
 		//!< Minimum valid setting for PS2 is 2 TQ.
-		uint8_t				:3;		///< Unimplemented\n
+		uint8_t						:3;		///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
-		uint8_t wakfil			:1;		///< Wake-up Filter\n
+		uint8_t wakfil				:1;		///< Wake-up Filter\n
 		//!< 1 = Wake-up filter is enabled\n
 		//!< 0 = Wake-up filter is disabled.
-		uint8_t sof			:1;		///< Start-of-Frame Signal\n
+		uint8_t sof					:1;		///< Start-of-Frame Signal\n
 		//!< If CLKEN (CANCTRL<2>) = 1:\n
 		//!< 1 = CLKOUT pin is enabled for SOF signal\n
 		//!< 0 = CLKOUT pin is enabled for clock out function\n
@@ -626,7 +618,7 @@ typedef union
  */
 typedef enum
 {
-	TXP			=	0x03,			///< Transmit Buffer Priority bits Mask
+	TXP  		=	0x03,			///< Transmit Buffer Priority bits Mask
 	TXP_0		=	0x01,			///< Transmit Buffer Priority bit 0 Mask
 	TXP_1		=	0x02,			///< Transmit Buffer Priority bit 1 Mask
 	TXREQ		=	0x08,			///< Message Transmit Request bit Mask
@@ -656,7 +648,7 @@ typedef union
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		mcp25625_priority_t txp		:2;			///< Transmit Buffer Priority\n
+		mcp25625_priority_t txp			:2;			///< Transmit Buffer Priority\n
 		//!< Determines buffer priority.
 		//!<
 		uint8_t 						:1;			///< Unimplemented\n
@@ -675,14 +667,14 @@ typedef union
 		uint8_t abft					:1;			///< Message Aborted Flag\n
 		//!< 1 if message was aborted.
 		//!<
-		uint8_t						:1;			///< Unimplemented\n
+		uint8_t							:1;			///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
 }mcp25625_txbxctrl_t;
 
 /******************************************************************************
- *  RXBxCTRL: RECEIVE BUFFER x CONTROL REGISTER
+ *  RXBxCTRL: RECEIVE BUFFER x CONTROL REGISTERS: RXB0CTRL / RXB1CTRL
  ******************************************************************************/
 
 /**
@@ -724,8 +716,8 @@ typedef enum
  */
 typedef enum
 {
-	MOD_A 		=	0x03,			///< Mod A (See mcp25625_rxb0ctr_t or mcp25625_rxb1ctr_t) documentation
-	MOD_B		=	0x00			///< Mod B (See mcp25625_rxb0ctr_t or mcp25625_rxb1ctr_t) documentation
+	MOD_A 		=	0x03,			///< Mod A (See mcp25625_rxb0ctr_t or mcp25625_rxb1ctr_t documentation)
+	MOD_B		=	0x00			///< Mod B (See mcp25625_rxb0ctr_t or mcp25625_rxb1ctr_t documentation)
 }mcp25625_rbopmod_t;
 
 /**
@@ -737,28 +729,28 @@ typedef union
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		mcp25625_accfltr_t filhit	:1;	///< Filter Hit
+		mcp25625_accfltr_t filhit		:1;	///< Filter Hit
 		//!< Indicates which acceptance filter enabled the reception of a message (RXF0 or RXF1)\n
 		//!< If a rollover from RXB0 to RXB1 occurs, the FILHIT0 bit will reflect the filter that accepted the message
 		//!< that rolled over.
 		uint8_t bukt1					:1;	///< Read-Only Copy of BUKT\n
 		//!< Used internally by the MCP25625.
 		//!<
-		uint8_t bukt					:1; ///<Rollover Enable\n
+		uint8_t bukt					:1;	///<Rollover Enable\n
 		//!< 1 = RXB0 message will roll over and be written to RXB1 if RXB0 is full\n
 		//!< 0 =Rollover is disabled.
 		uint8_t rxrtr					:1;	///< Received Remote Transfer Request\n
 		//!< 1 = Remote Transfer Request received\n
 		//!< 0 = No Remote Transfer Request received.
-		uint8_t						:1;	///< Unimplemented\n
+		uint8_t							:1;	///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
-		mcp25625_rbopmod_t rxm		:2;	///< Receive Buffer Operating mode\n
+		mcp25625_rbopmod_t rxm			:2;	///< Receive Buffer Operating mode\n
 		//!< MOD_A: Turns mask/filters off; receives any message.
 		//!< MOD_B: Receives all valid messages using either Standard or Extended Identifiers that meet filter criteria;
 		//!< Extended ID Filter registers, RXFxEID8 and RXFxEID0, are applied to the first two bytes of data in
 		//!< the messages with standard IDs.
-		uint8_t						:1;			///< Unimplemented\n
+		uint8_t							:1;			///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
@@ -773,285 +765,188 @@ typedef union
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		mcp25625_accfltr_t filhit	:3;	///< Filter Hit\n
+		mcp25625_accfltr_t filhit		:3;	///< Filter Hit\n
 		//!< Indicates which acceptance filter enabled the reception of a message\n
 		//!< RXF1, RXF0 only if the BUKT bit is set in RXB0CTRL.
 		uint8_t rxrtr					:1;	///< Received Remote Transfer Request\n
 		//!< 1 = Remote Transfer Request received\n
 		//!< 0 = No Remote Transfer Request received.
-		uint8_t						:1;	///< Unimplemented\n
+		uint8_t							:1;	///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
-		mcp25625_rbopmod_t rxm		:2;	///< Receive Buffer Operating mode\n
+		mcp25625_rbopmod_t rxm			:2;	///< Receive Buffer Operating mode\n
 		//!< MOD_A: Turns mask/filters off; receives any message\n
 		//!< MOD_B: Receives all valid messages using either Standard or Extended Identifiers that meet filter criteria.
-		uint8_t						:1;			///< Unimplemented\n
+		uint8_t							:1;			///< Unimplemented\n
 		//!< Read as ‘0’.
 		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
 }mcp25625_rxb1ctr_t;
 
-
-
-
-
-
-//TODO: Finished until here.
-
-
-
-
-
-
-
-
-
-
 /******************************************************************************
- *  RXFxSIDH: FILTER x STANDARD IDENTIFIER HIGH REGISTER
+ *  SIDH: STANDARD IDENTIFIER HIGH REGISTER
  ******************************************************************************/
 
 /**
- * @union mcp25625_rxfxsidh_t
- * @brief RXFxSIDH: FILTER x STANDARD IDENTIFIER HIGH REGISTER
+ * @union mcp25625_sidh_t
+ * @brief SIDH: STANDARD IDENTIFIER HIGH REGISTER.  RXFxSIDH/RXMxSIDH/TXBxSIDH/RXBxSIDH.
  */
 typedef union	//Using union for uniform code
 {
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		uint8_t	sid_h		:8;		///< Standard Identifier Filter bits\n
-		//!< These bits hold the filter bits to be applied to bits<10:3>
-		//!< of the Standard Identifier portion of a received message.
+		uint8_t	sid_h					:8;		///< Standard Identifier high part\n
+		//!< Refer to datasheet.
+		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_rxfxsidh_t;
+}mcp25625_sidh_t;
 
 /******************************************************************************
- *  RXFxSIDL: FILTER x STANDARD IDENTIFIER LOW REGISTER
+ *  SIDL: STANDARD IDENTIFIER LOW REGISTER
  ******************************************************************************/
 
 /**
- * @union mcp25625_rxfxsidl_t
- * @brief RXFxSIDL: FILTER x STANDARD IDENTIFIER LOW REGISTER
+ * @union mcp25625_sidl_t
+ * @brief SIDL: STANDARD IDENTIFIER LOW REGISTER.\n
+ * Models several registers: RXFxSIDL/RXMxSIDL/TXBxSIDL/RXBxSIDL\n
+ * Refer to datasheet for register-specific documentation.
  */
 typedef union
 {
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		uint8_t	eid_hh		:2;		///< Extended Identifier Filter bits \n
-		//!< These bits hold the filter bits to be applied to bits<17:16> of the Extended Identifier portion of a
-		//!< received message.
-		uint8_t				:1;		///< Unimplemented
-		//!< Read as ‘0’
+		uint8_t	eid_hh				:2;		///< Extended Identifier higher part\n
+		//!< Refer to datasheet.
 		//!<
-		uint8_t exide		:1;		///< Extended Identifier Enable bit\n
-		//!< 1 = Filter is applied only to extended frames\n
-		//!< 0 = Filter is applied only to standard frames.
-		uint8_t				:1;		///< Unimplemented
-		//!< Read as ‘0’
+		uint8_t						:1;		///< Unimplemented
+		//!< Read as ‘0’.
 		//!<
-		uint8_t	sid_l		:3;		///< Standard Identifier Filter bits\n
-		//!< These bits hold the filter bits to be applied to bits<10:3>
-		//!< of the Standard Identifier portion of a received message.
+		uint8_t ide					:1;		///< Extended Identifier Flag / Enable\n
+		//!< Refer to datasheet.
+		//!<
+		uint8_t ssr					:1;		///< Standard Frame Remote Transmit Request\n
+		//!< Refer to datasheet
+		//!<
+		uint8_t	sid_l		:3;		///< Standard Identifier low part\n
+		//!< Refer to datasheet
+		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_rxfxsidl_t;
+}mcp25625_sidl_t;
 
 /******************************************************************************
- *  RXFxEID8: FILTER x EXTENDED IDENTIFIER HIGH REGISTER
+ *  EID8: EXTENDED IDENTIFIER HIGH REGISTER
  ******************************************************************************/
 
 /**
- * @union mcp25625_rxfxeid8_t
- * @brief RXFxEID8: FILTER x EXTENDED IDENTIFIER HIGH REGISTER
+ * @union mcp25625_eid8_t
+ * @brief EID8: EXTENDED IDENTIFIER HIGH REGISTER.
+ * Models several registers: RXFxEID8/RXMxEID8/TXBxEID8/RXBxEID8\n
+ * Refer to datasheet for register-specific documentation.
  */
 typedef union	//Using union for uniform code
 {
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		uint8_t	eid_h		:8;		///<  Extended Identifier bits\n
-		//!< These bits hold the filter bits to be applied to bits<15:8> of the Extended Identifier portion of a received
-		//!< message or to Byte 0 in received data if corresponding with RXM<1:0> = 00 and EXIDE = 0.
+		uint8_t	eid8					:8;		///< Extended Identifier high part\n
+		//!< Refer to datasheet.
+		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_rxfxeid8_t;
+}mcp25625_eid8_t;
 
 /******************************************************************************
- *  RXFxEID0: FILTER x EXTENDED IDENTIFIER LOW REGISTER
+ *  EID0: EXTENDED IDENTIFIER LOW REGISTER
  ******************************************************************************/
 
 /**
- * @union mcp25625_rxfxeid0_t
- * @brief RXFxEID0: FILTER x EXTENDED IDENTIFIER LOW REGISTER
+ * @union mcp25625_eid0_t
+ * @brief EID0: EXTENDED IDENTIFIER LOW REGISTER.
+ * Models several registers: RXFxEID0/RXMxEID0/TXBxEID0/RXBxEID0\n
+ * Refer to datasheet for register-specific documentation.
  */
 typedef union	//Using union for uniform code
 {
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		uint8_t	eid_l		:8;		///<  Extended Identifier bits\n
-		//!< These bits hold the filter bits to be applied to bits<7:0> of the Extended Identifier portion of a received
-		//!< message or to Byte 1 in received data if corresponding with RXM<1:0> = 00 and EXIDE = 0.
+		uint8_t	eid0					:8;		///< Extended Identifier low part\n
+		//!< Refer to datasheet.
+		//!<
 	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_rxfxeid0_t;
+}mcp25625_eid0_t;
 
 /******************************************************************************
- *  TXBxSIDH: TRANSMIT BUFFER x STANDARD IDENTIFIER HIGH REGISTER
+ *  DLC: DATA LENGTH CODE REGISTER
  ******************************************************************************/
 
 /**
- * @union mcp25625_txbxsidh_t
- * @brief TXBxSIDH: TRANSMIT BUFFER x STANDARD IDENTIFIER HIGH REGISTTER
+ * @union mcp25625_dlc_t
+ * @brief DLC: DATA LENGTH CODE REGISTER.
+ * Models several registers:  TXBxDLC/RXBxDLC\n
+ * Refer to datasheet for register-specific documentation.
  */
 typedef union	//Using union for uniform code
 {
 	uint8_t byte;					///< Whole register
 	struct
 	{
-		uint8_t	sid_h		:8;		///< Standard Identifier Filter bits\n
-		//!< bits<10:3>.
-	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_txbxsidh_t;
-
-/******************************************************************************
- *  TXBxSIDL: TRANSMIT BUFFER x STANDARD IDENTIFIER LOW REGISTER
- ******************************************************************************/
-
-/**
- * @union mcp25625_txbxsidl_t
- * @brief XBxSIDL: TRANSMIT BUFFER x STANDARD IDENTIFIER LOW REGISTER
- */
-typedef union
-{
-	uint8_t byte;					///< Whole register
-	struct
-	{
-		uint8_t	eid_hh		:2;		///< Extended Identifier Filter bits \n
-		//!< bits<17:16>.
-		uint8_t				:1;		///< Unimplemented
+		uint8_t	dlc					:4;		///< Data Length Code\n
+		//!< Refer to datasheet.
+		//!<
+		uint8_t 					:2		///< Unimplemented / Reserved
+		//!< Refer to datasheet.
+		//!<
+		uint8_t rtr					:1		///< Remote Transmission Request
+		//!< Refer to datasheet.
+		//!<
+		uint8_t						:1;		///< Unimplemented
 		//!< Read as ‘0’
 		//!<
-		uint8_t exide		:1;		///< Extended Identifier Enable bit\n
-		//!< 1 = Filter is applied only to extended frames\n
-		//!< 0 = Filter is applied only to standard frames.
-		uint8_t				:1;		///< Unimplemented
-		//!< Read as ‘0’
-		//!<
-		uint8_t	sid_l		:3;		///< Standard Identifier Filter bits\n
-		//!< bits<10:3>.
 	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_txbxsidl_t;
+}mcp25625_dlc_t;
 
 /******************************************************************************
- *  TXBxEID8: TRANSMIT BUFFER x EXTENDED IDENTIFIER HIGH REGISTER
+ * ID: ID Struct
  ******************************************************************************/
 
 /**
- * @union mcp25625_txbxeid8_t
- * @brief RXFxEID8: TRANSMIT BUFFER x EXTENDED IDENTIFIER HIGH REGISTER
+ * @struct mcp25625_id_t
+ * @brief ID: Collection of SIDH/SIDL/EID8/EID0 Registers
  */
-typedef union	//Using union for uniform code
+typedef struct	//Using union for uniform code
 {
-	uint8_t byte;					///< Whole register
-	struct
-	{
-		uint8_t	eid_h		:8;		///<  Extended Identifier bits\n
-		//!< bits<15:8>.
-	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_txbxeid8_t;
+	mcp25625_sidh_t sidh;		///< STANDARD IDENTIFIER HIGH REGISTER
+	mcp25625_sidl_t sidl;		///< STANDARD IDENTIFIER LOW REGISTER
+	mcp25625_eid8_t eid8;		///< EXTENDED IDENTIFIER HIGH REGISTER.
+	mcp25625_eid0_t eid0;		///< EXTENDED IDENTIFIER LOW REGISTER.
+}mcp25625_id_t __attribute__((packed, aligned(1)));	///< No Padding.
 
 /******************************************************************************
- *  TXBxEID0: TRANSMIT BUFFER x EXTENDED IDENTIFIER LOW REGISTER
+ * DATA: Data structure
  ******************************************************************************/
-
 /**
- * @union mcp25625_txbxeid0_t
- * @brief RXFxEID0: TRANSMIT BUFFER x EXTENDED IDENTIFIER LOW REGISTER
+ * @struct mcp25625_data_t
+ * @brief Data: Data Length Code Register with Data buffer
  */
-typedef union	//Using union for uniform code
+typedef struct	//Using union for uniform code
 {
-	uint8_t byte;					///< Whole register
-	struct
-	{
-		uint8_t	eid_l		:8;		///<  Extended Identifier bits\n
-		//!< bits<7:0>.
-	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_txbxeid0_t;
+	mcp25625_dlc_t dlc;			///< DATA LENGTH CODE
+	uint8_t	buffer[8];			///< Data Buffer
+}mcp25625_data_t __attribute__((packed, aligned(1)));	///< No Padding.
 
 /******************************************************************************
- *  TXBxDLC: TRANSMIT BUFFER x DATA LENGTH CODE REGISTER
+ * BUFFER_DATA: ID + DATA
  ******************************************************************************/
-
 /**
- * @union mcp25625_txbxdlc_t
- * @brief TXBxDLC: TRANSMIT BUFFER x DATA LENGTH CODE REGISTER
+ * @struct mcp25625_id_data_t
+ * @brief ID+Data:  SIDH/SIDL/EID8/EID0/DLC and Buffer.
  */
-typedef union
+typedef struct	//Using union for uniform code
 {
-	uint8_t byte;					///< Whole register
-	struct
-	{
-		uint8_t	dlc		:4;		///<  Data Length Code bits\n
-		//!< Sets the number of data bytes to be transmitted (0 to 8 bytes)\n
-		//!< It is possible to set to a value greater than eight;
-		//!< however, only eight bytes are transmitted.
-		uint8_t			:2;		///< Unimplemented
-		//!< Read as ‘0’
-		//!<
-		uint8_t rtr		:1;		///< Remote Transmission Request bit
-		//!< 1 = Transmitted message will be a Remote Transmit Request
-		//!< 0 = Transmitted message will be a data frame
-		uint8_t			:1;		///< Unimplemented
-		//!< Read as ‘0’
-		//!<
-
-	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_txbxdlc_t;
-
-
-
-/******************************************************************************
- *  TXB_ID: TXBxSIDH | TXBxSIDL | TXBxEID8 | TXBxEID0 Struct
- ******************************************************************************/
-
-/**
- * @union mcp25625_txb_id_t
- * @brief  TRANSMIT BUFFER x id
- */
-typedef union
-{
-	struct
-	{
-		mcp25625_txbxsidh_t sidh;	///< TRANSMIT BUFFER x STANDARD IDENTIFIER HIGH REGISTER
-		mcp25625_txbxsidl_t sidl;	///< TRANSMIT BUFFER x STANDARD IDENTIFIER LOW REGISTER
-		mcp25625_txbxeid8_t eid8;	///< TRANSMIT BUFFER x EXTENDED IDENTIFIER HIGH REGISTER
-		mcp25625_txbxeid0_t eid0;	///< TRANSMIT BUFFER x EXTENDED IDENTIFIER LOW REGISTER
-	}__attribute__((packed, aligned(1)));	///< No Padding.;
-	struct
-	{
-
-		uint16_t sid	:11;		///< TRANSMIT BUFFER x STANDARD IDENTIFIER
-		uint8_t			:1;			///< Unimplemented
-		uint8_t exide	:1;			///< Extended Identifier Enable
-		uint8_t			:1;			///< Unimplemented
-		uint32_t eid	:18;		///< TRANSMIT BUFFER x EXTENDED IDENTIFIER
-	}__attribute__((packed, aligned(1)));	///< No Padding.
-}mcp25625_txb_id_t;
-
-
-/******************************************************************************
- *  TXF
- ******************************************************************************/
-
-/**
- * @struct mcp25625_txb_t
- * @brief  TRANSMIT BUFFER
- */
-typedef struct
-{
-	mcp25625_txb_id_t id;		///< id
-	mcp25625_txbxdlc_t dlc;		///< DATA LENGTH CODE REGISTER
-	uint8_t	d[8];				///< DATA BYTE REGISTERS
-}mcp25625_txb_t __attribute__((packed, aligned(1)));///< No Padding.
+	mcp25625_id_t id;			///< ID
+	mcp25625_data_t	data;		///< DLC + buffer
+}mcp25625_id_data_t __attribute__((packed, aligned(1)));	///< No Padding.
 
 #endif /* CAN_MCP25625_MCP25625_DRIVER_H_ */
