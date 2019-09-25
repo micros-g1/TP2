@@ -8,7 +8,6 @@
 #include <CAN/CAN.h>
 #include <CAN/MCP25625/MCP25625_driver.h>
 
-
 // Target bitrate: 125kbit/seg == 8us/bit
 // TBIT = [SYNC_T + PSEG_T + PHSEG1_T + PHSEG2_T ] = N x TQ
 // TQ = 2 x (BRP<5:0> + 1)/FOSC = K/FOSC => TBIT = N x K / FOSC
@@ -87,9 +86,9 @@ void CAN_init()
 	//TODO: Configure interrupt and callback
 	//Enable interrupts in MCP25625
 	mcp25625_write_register(CANINTE_ADDR, RX0IE | RX1IE);
-	//Set to normal mode
+	//Set to normal mode, and disable clock, which is not needed.
 	//TODO: Change to NORMAL_OPERATION after testing
-	mcp25625_bit_modify(CANSTAT_ADDR, OPMOD, LOOPBACK_MODE << OPMOD_POS);
+	mcp25625_bit_modify(CANSTAT_ADDR, OPMOD | CLKEN, LOOPBACK_MODE << OPMOD_POS | 0 << CLKEN_POS);
 	//While until normal operation mode is set.
 	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != NORMAL_OPERATION);
 }

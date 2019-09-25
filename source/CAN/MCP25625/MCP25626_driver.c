@@ -6,7 +6,9 @@
  */
 #include <CAN/MCP25625/MCP25625_driver.h>
 #include <string.h>
+//#include<SPI/SPI.h>
 
+//TODO: Remove temp code.
 //This function represents an spi function to be implemented in the future
 #define DEBUG_LENGTH 1024
 static int i_deb = 0;
