@@ -48,8 +48,8 @@ typedef struct
 	uint8_t data[8];			///< @brief data
 }can_message_t;
 
-typedef void *CAN_message_callback_t (can_message_t);	///< @brief CAN Message Callback definition
-typedef void *CAN_rx_buffer_overflow_callback_t(void);	///< @brief CAN RX Buffer overflow callback definition
+typedef void (*CAN_message_callback_t) (const can_message_t*);	///< @brief CAN Message Callback definition
+typedef void (*CAN_rx_buffer_overflow_callback_t)(void);	///< @brief CAN RX Buffer overflow callback definition
 
 /**
  * @brief CAN Initialization
@@ -74,7 +74,7 @@ bool CAN_send(const can_message_t *p_message);
  * @brief CAN Get Message
  * @details Returns next received CAN Message.
  * @param p_frame Pointer to CAN Message struct where received message will be saved.
- * @return *false* if no message available.
+ * @return *false* if no message available, without modifying contents of p_message.
  */
 bool CAN_get(can_message_t *p_frame);
 

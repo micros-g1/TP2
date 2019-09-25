@@ -19,7 +19,6 @@
 
 // Documented with Doxygen
 
-//TODO: Doxygen struct detailed definition?
 //TODO: Check compiler's bitfield implementation.
 
 #ifndef CAN_MCP25625_MCP25625_DRIVER_H_
@@ -29,40 +28,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-/**
- * @enum mcp25625_instruction_t
- * @brief MCP25625 SPI Instructions.
- * @details Instruction Bytes for all operations
- */
-typedef enum {
 
-    MCP_RESET				= 0xC0,	///< Resets the internal registers to
-									///		the default state, sets Configuration mode.
-	MCP_READ				= 0x03,	///< Reads data from the register beginning
-									///		at the selected address
-	MCP_READ_RX_BUFFER		= 0x90,	///< When reading a receive buffer,
-									///		reduces the overhead of a normal READ
-									///		command by placing the Address Pointer at one
-									///		of four locations, as indicated by ‘nm’
-									/// 	(1001 0nm0)
-	MCP_WRITE				= 0x02,	///< Writes data to the register beginning at the
-									///		selected address.
-	MCP_LOAD_TX_BUFFER		= 0x40,	///< When loading a transmit buffer, reduces the
-									///		overhead of a normal WRITE command by placing
-									///		the Address Pointer at one of six locations, as
-									///		indicated by ‘abc’. (0100 0abc)
-	MCP_RTS 				= 0x80,	///< Inst	ructs the controller to begin the message
-									///		transmission sequence for any of the transmit
-									///		buffers. 1000 0nnn -> nnn=(TXB2,TXB1,TXB0)
-	MCP_READ_STATUS			= 0xA0,	///< Quick polling command that reads several Status
-									///		bits for transmit and receive functions.
-	MCP_RX_STATUS			= 0xB0,	///< Quick polling command that indicates a filter
-									///		match and message type 	(standard, extended
-									///		and/or remote) of the received message.
-	MCP_BIT_MODIFY			= 0x05,	///< Allows the user to set or clear individual bits
-									/// 	in a particular register. Not for all
-									///		registers.
-}mcp25625_instruction_t;
 
 
 
@@ -78,11 +44,11 @@ typedef enum {
  */
 typedef enum
 {
-	NORMAL_OPERATION	= 0x00,		///< Normal Operation mode
-	SLEEP_MODE			= 0x01,		///< Sleep mode
-	LOOPBACK_MODE		= 0x02,		///< Loopback mode
-	LISTEN_ONLY			= 0x03,		///< Listen-Only mode
-	CONFIG_MODE			= 0x04		///< Configuration mode
+	NORMAL_OPERATION	= 0x00,		///< @brief Normal Operation mode
+	SLEEP_MODE			= 0x01,		///< @brief Sleep mode
+	LOOPBACK_MODE		= 0x02,		///< @brief Loopback mode
+	LISTEN_ONLY			= 0x03,		///< @brief Listen-Only mode
+	CONFIG_MODE			= 0x04		///< @brief Configuration mode
 }mcp25625_opmode_t;
 
 /**
@@ -91,9 +57,9 @@ typedef enum
  * @details MCP25625 has three Transmit buffers. Enum for transfer buffer id.
  */
 typedef enum {
-    TXB0	=	0,					///< Transmit buffer TXB0
-    TXB1	=	1,					///< Transmit buffer TXB1
-    TXB2	=	2					///< Transmit buffer TXB2
+    TXB0	=	0,					///< @brief Transmit buffer TXB0
+    TXB1	=	1,					///< @brief Transmit buffer TXB1
+    TXB2	=	2					///< @brief Transmit buffer TXB2
 }mcp25625_txb_id_t;
 
 /**
@@ -102,8 +68,8 @@ typedef enum {
  * @details MCP25625 has two receive buffers. Enum for receive buffer id.
  */
 typedef enum {
-    RXB0	=	0,					///< Receive buffer RXB0
-    RXB1	=	1,					///< Receive buffer RXB1
+    RXB0	=	0,					///< @brief Receive buffer RXB0
+    RXB1	=	1,					///< @brief Receive buffer RXB1
 }mcp25625_rxb_id_t;
 
 /**
@@ -113,9 +79,9 @@ typedef enum {
  * These flags are used internally by the MCP25625's request to send instruction.
  */
 typedef enum {
-	TXB0_RTS	=	0x01,			///< TXB0 Request to send
-	TXB1_RTS	=	0x02,			///< TXB1 Request to send
-    TXB2_RTS	=	0x04,			///< TXB2 Request to send
+	TXB0_RTS	=	0x01,			///< @brief TXB0 Request to send
+	TXB1_RTS	=	0x02,			///< @brief TXB1 Request to send
+    TXB2_RTS	=	0x04,			///< @brief TXB2 Request to send
 }mcp25625_txb_rts_flag_t;
 
 /**
@@ -125,14 +91,14 @@ typedef enum {
  */
 typedef enum
 {
-	NO_INTERRUPT 		= 0x00,		///< No Interrupt
-	ERROR_INTERRUPT		= 0x01,		///< Error interrupt
-	WAKE_UP_INTERRUPT	= 0x02,		///< Wake-up interrupt
-	TXB0_INTERRUPT		= 0x03,		///< TXB0 interrupt
-	TXB1_INTERRUPT		= 0x04,		///< TXB1 interrupt
-	TXB2_INTERRUPT		= 0x05,		///< TXB2 interrupt
-	RXB0_INTERRUPT		= 0x06,		///< RXB0 interrupt
-	RXB1_INTERRUPT		= 0x07		///< RXB1 interrupt
+	NO_INTERRUPT 		= 0x00,		///< @brief No Interrupt
+	ERROR_INTERRUPT		= 0x01,		///< @brief Error interrupt
+	WAKE_UP_INTERRUPT	= 0x02,		///< @brief Wake-up interrupt
+	TXB0_INTERRUPT		= 0x03,		///< @brief TXB0 interrupt
+	TXB1_INTERRUPT		= 0x04,		///< @brief TXB1 interrupt
+	TXB2_INTERRUPT		= 0x05,		///< @brief TXB2 interrupt
+	RXB0_INTERRUPT		= 0x06,		///< @brief RXB0 interrupt
+	RXB1_INTERRUPT		= 0x07		///< @brief RXB1 interrupt
 }mcp25625_icod_t;
 
 /**
@@ -142,10 +108,10 @@ typedef enum
  */
 typedef enum
 {
-	SYSCLK_DIV_1	= 0x00,		///< System Clock/1
-	SYSCLK_DIV_2	= 0x01,		///< System Clock/2
-	SYSCLK_DIV_4	= 0x02,		///< System Clock/4
-	SYSCLK_DIV_8	= 0x03,		///< System Clock/8
+	SYSCLK_DIV_1	= 0x00,		///< @brief System Clock/1
+	SYSCLK_DIV_2	= 0x01,		///< @brief System Clock/2
+	SYSCLK_DIV_4	= 0x02,		///< @brief System Clock/4
+	SYSCLK_DIV_8	= 0x03,		///< @brief System Clock/8
 }mcp25625_prescaler_t;
 
 /**
@@ -155,10 +121,10 @@ typedef enum
  */
 typedef enum
 {
-	HIGHEST_PRIORITY	=	0x03,	///< Highest message priority
-	HIGH_PRIORITY		= 	0x02,	///< High intermediate message priority
-	LOW_PRIORITY		=	0x01,	///< Low intermediate message priority
-	LOWEST_PRIOIRTY		=	0x00	///< Lowest message priority
+	HIGHEST_PRIORITY	=	0x03,	///< @brief Highest message priority
+	HIGH_PRIORITY		= 	0x02,	///< @brief High intermediate message priority
+	LOW_PRIORITY		=	0x01,	///< @brief Low intermediate message priority
+	LOWEST_PRIOIRTY		=	0x00	///< @brief Lowest message priority
 }mcp25625_priority_t;
 
 /**
@@ -168,14 +134,14 @@ typedef enum
  */
 typedef enum
 {
-	RXF0 = 0x00,		///< Acceptance Filter 0
-	RXF1 = 0x01,		///< Acceptance Filter 1
-	RXF2 = 0x02,		///< Acceptance Filter 2
-	RXF3 = 0x03,		///< Acceptance Filter 3
-	RXF4 = 0x04,		///< Acceptance Filter 4
-	RXF5 = 0x05,		///< Acceptance Filter 5
-	RXF0_RO = 0x06,		///< Acceptance Filter 0 (Used when rollover to RXB1 occurs)
-	RXF1_RO = 0x07		///< Acceptance Filter 1 (Used when rollover to RXB1 occurs)
+	RXF0 = 0x00,		///< @brief Acceptance Filter 0
+	RXF1 = 0x01,		///< @brief Acceptance Filter 1
+	RXF2 = 0x02,		///< @brief Acceptance Filter 2
+	RXF3 = 0x03,		///< @brief Acceptance Filter 3
+	RXF4 = 0x04,		///< @brief Acceptance Filter 4
+	RXF5 = 0x05,		///< @brief Acceptance Filter 5
+	RXF0_RO = 0x06,		///< @brief Acceptance Filter 0 (Used when rollover to RXB1 occurs)
+	RXF1_RO = 0x07		///< @brief Acceptance Filter 1 (Used when rollover to RXB1 occurs)
 }mcp25625_accfltr_id_t;
 
 /**
@@ -187,8 +153,8 @@ typedef enum
  */
 typedef enum
 {
-	RXF0_RXB0 = 0x00,		///< Acceptance Filter 0
-	RXF1_RXB0 = 0x01,		///< Acceptance Filter 1
+	RXF0_RXB0 = 0x00,		///< @brief Acceptance Filter 0
+	RXF1_RXB0 = 0x01,		///< @brief Acceptance Filter 1
 }mcp25625_accfltr_rxb0_id_t;
 
 /**
@@ -198,8 +164,8 @@ typedef enum
  */
 typedef enum
 {
-	RXM0 = 0x00,		///< Acceptance Filter 0
-	RXM1 = 0x01,		///< Acceptance Filter 1
+	RXM0 = 0x00,		///< @brief Acceptance Filter 0
+	RXM1 = 0x01,		///< @brief Acceptance Filter 1
 }mcp25625_accmsk_id_t;
 
 /**
@@ -208,8 +174,8 @@ typedef enum
  */
 typedef enum
 {
-	RECEIVE_ANY_MESSAGE		=	0x03,			///< See mcp25625_rxb0ctrl_t or mcp25625_rxb1ctrl_t documentation
-	RECEIVE_VALID_MESSAGES	=	0x00						///See mcp25625_rxb0ctrl_t or mcp25625_rxb1ctrl_t documentation
+	RECEIVE_ANY_MESSAGE		=	0x03,			///< @brief See mcp25625_rxb0ctrl_t or mcp25625_rxb1ctrl_t documentation
+	RECEIVE_VALID_MESSAGES	=	0x00			///< @brief See mcp25625_rxb0ctrl_t or mcp25625_rxb1ctrl_t documentation
 }mcp25625_rbopmod_t;
 
 /**
@@ -218,10 +184,10 @@ typedef enum
  * @details Indicates received message type.
  */
 typedef enum {
-    STD_DATA_FRAME		=	0x00,				///< Standard Data Frame
-    STD_REMOTE_FRAME	=	0x01,				///< Standard Remote Frame
-    EXT_DATA_FRAME		=	0x02,				///< Extended Data Frame
-	EXT_REMOTE_FRAME 	=	0x03				///< Extended Remote Frame
+    STD_DATA_FRAME		=	0x00,				///< @brief Standard Data Frame
+    STD_REMOTE_FRAME	=	0x01,				///< @brief Standard Remote Frame
+    EXT_DATA_FRAME		=	0x02,				///< @brief Extended Data Frame
+	EXT_REMOTE_FRAME 	=	0x03				///< @brief Extended Remote Frame
 }mcp25625_msg_type_t;
 
 /**
@@ -230,10 +196,10 @@ typedef enum {
  * @details Indicates if rx message received, and its buffer
  */
 typedef enum {
-    NO_RX_MSG		=	0x00,				///< No RX Message
-    RXB0_MSG		=	0x01,				///< Message in RXB0
-    RXB1_MSG		=	0x02,				///< Message in RXB1
-	BOTH_RX_MSG 	=	0x03				///< Messages in Both Buffers
+    NO_RX_MSG		=	0x00,				///< @brief No RX Message
+    RXB0_MSG		=	0x01,				///< @brief Message in RXB0
+    RXB1_MSG		=	0x02,				///< @brief Message in RXB1
+	BOTH_RX_MSG 	=	0x03				///< @brief Messages in Both Buffers
 }mcp25625_rec_msg_info_t;
 
 
@@ -250,38 +216,38 @@ typedef enum {
  * and offsets for accessing specific registers within certain regions
  */
 typedef enum {
-	CTRL_OFFST		=	-1,		///< Offset to add to TXBx_ADDR or RXBx_ADDR for accessing CTRL Register
-    SIDH_OFFST		=	0,		///< Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to SIDH
-	SIDL_OFFST		=	1,		///< Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to SIDL
-	EIF8_OFFST		=	2,		///< Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to EID8
-	EIF0_OFFST		=	3,		///< Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to EID0
-	DLC_OFFST		=	4,		///< Offset to add to TXBx_ADDR or RXBx_ADDR for pointing to DLC
-	DATA_OFFST		=	5,		///< Offset to add to TXBx_ADDR or RXBx_ADDR for pointing to start of DATA Buffer
-	RXF0_ADDR		=	0x00,	///< RXF0 Region Address
-	RXF1_ADDR		=	0x04,	///< RXF1 Region Address
-	RXF2_ADDR		=	0x08,	///< RXF2 Region Address
-	RXF3_ADDR		=	0x10,	///< RXF3 Region Address
-	RXF4_ADDR		=	0x14,	///< RXF4 Region Address
-	RXF5_ADDR		=	0x18,	///< RXF5 Region Address
-	RXM0_ADDR		=	0x20,	///< RXM0 Region Address
-	RXM1_ADDR		=	0x24,	///< RXM1 Region Address
-	TXB0_ADDR		=	0x31,	///< TXB0 Region Address
-	TXB1_ADDR		=	0x41,	///< TXB1 Region Address
-	TXB2_ADDR		=	0x51,	///< TXB2 Region Address
-	RXB0_ADDR		=	0x61,	///< RXB0 Region Address
-	RXB1_ADDR		=	0x71,	///< RXB1 Region Address
-	BFPCTRL_ADDR	=	0x0C,	///< BFPCTRL Address
-	TXRTSCTRL_ADDR	= 	0x0D,	///< TXRTSCTRL Address
-	CANSTAT_ADDR	=	0x0E,	///< CANSTAT Address
-	CANCTRL_ADDR	=	0x0F,	///< CANCTRL Address
-	TEC_ADDR		=	0x1C,	///< TEC Address
-	REC_ADDR		=	0x1D,	///< REC Address
-	CNF3_ADDR		=	0x28,	///< CNF3 Address
-	CNF2_ADDR		=	0x29,	///< CNF2 Address
-	CNF1_ADDR		=	0x2A,	///< CNF1 Address
-	CANINTE_ADDR	=	0x2B,	///< CANINTE Address
-	CANINTF_ADDR	=	0x2C,	///< CANINTF Address
-	EFLG_ADDR		=	0x2D,	///< EFLG Address
+	CTRL_OFFSET		=	-1,		///< @brief Offset to add to TXBx_ADDR or RXBx_ADDR for accessing CTRL Register
+    SIDH_OFFSET		=	0,		///< @brief Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to SIDH
+	SIDL_OFFSET		=	1,		///< @brief Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to SIDL
+	EIF8_OFFSET		=	2,		///< @brief Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to EID8
+	EIF0_OFFSET		=	3,		///< @brief Offset to add to RXFx_ADDR, RXMx_ADDR, TXBx_ADDR or RXBx_ADDR for pointing to EID0
+	DLC_OFFSET		=	4,		///< @brief Offset to add to TXBx_ADDR or RXBx_ADDR for pointing to DLC
+	DATA_OFFST		=	5,		///< @brief Offset to add to TXBx_ADDR or RXBx_ADDR for pointing to start of DATA Buffer
+	RXF0_ADDR		=	0x00,	///< @brief RXF0 Region Address
+	RXF1_ADDR		=	0x04,	///< @brief RXF1 Region Address
+	RXF2_ADDR		=	0x08,	///< @brief RXF2 Region Address
+	RXF3_ADDR		=	0x10,	///< @brief RXF3 Region Address
+	RXF4_ADDR		=	0x14,	///< @brief RXF4 Region Address
+	RXF5_ADDR		=	0x18,	///< @brief RXF5 Region Address
+	RXM0_ADDR		=	0x20,	///< @brief RXM0 Region Address
+	RXM1_ADDR		=	0x24,	///< @brief RXM1 Region Address
+	TXB0_ADDR		=	0x31,	///< @brief TXB0 Region Address
+	TXB1_ADDR		=	0x41,	///< @brief TXB1 Region Address
+	TXB2_ADDR		=	0x51,	///< @brief TXB2 Region Address
+	RXB0_ADDR		=	0x61,	///< @brief RXB0 Region Address
+	RXB1_ADDR		=	0x71,	///< @brief RXB1 Region Address
+	BFPCTRL_ADDR	=	0x0C,	///< @brief BFPCTRL Address
+	TXRTSCTRL_ADDR	= 	0x0D,	///< @brief TXRTSCTRL Address
+	CANSTAT_ADDR	=	0x0E,	///< @brief CANSTAT Address
+	CANCTRL_ADDR	=	0x0F,	///< @brief CANCTRL Address
+	TEC_ADDR		=	0x1C,	///< @brief TEC Address
+	REC_ADDR		=	0x1D,	///< @brief REC Address
+	CNF3_ADDR		=	0x28,	///< @brief CNF3 Address
+	CNF2_ADDR		=	0x29,	///< @brief CNF2 Address
+	CNF1_ADDR		=	0x2A,	///< @brief CNF1 Address
+	CANINTE_ADDR	=	0x2B,	///< @brief CANINTE Address
+	CANINTF_ADDR	=	0x2C,	///< @brief CANINTF Address
+	EFLG_ADDR		=	0x2D,	///< @brief EFLG Address
 }mcp25625_addr_t;
 
 /********************************************************************************
@@ -290,6 +256,7 @@ typedef enum {
  ********************************************************************************
  ********************************************************************************
  * For configuration registers, masks for configuration are provided			*
+ * Defines with position of elements within struct is provided					*
  * Also, for each configuration register, an union with the whole byte			*
  * and access to each specific element is provided.								*
  ********************************************************************************/
@@ -304,13 +271,27 @@ typedef enum {
  */
 typedef enum
 {
-	B0BFM	=	0x01,			///< !Rx0BF Pin Operation mode bit Mask
-	B1BFM	=	0x02,			///< !Rx1BF Pin Operation mode bit Mask
-	B0BFE	=	0x04,			///< !Rx0BF Pin function Enable bit Mask
-	B1BFE	=	0x08, 			///< !Rx1BF Pin function Enable bit Mask
-	B0BFS	=	0x10,			///< !Rx0BF Pin State bit Mask
-	B1BFS	=	0x20			///< !Rx1BF Pin State bit Mask
+	B0BFM		=	0x01,			///< @brief !Rx0BF Pin Operation mode bit Mask
+	B1BFM		=	0x02,			///< @brief !Rx1BF Pin Operation mode bit Mask
+	B0BFE		=	0x04,			///< @brief !Rx0BF Pin function Enable bit Mask
+	B1BFE		=	0x08, 			///< @brief !Rx1BF Pin function Enable bit Mask
+	B0BFS		=	0x10,			///< @brief !Rx0BF Pin State bit Mask
+	B1BFS		=	0x20,			///< @brief !Rx1BF Pin State bit Mask
 }mcp25625_bfpctrl_mask_t;
+
+/**
+ * @enum mcp25625_bfpctrl_pos_t
+ * @brief !RxnBF PIN CONTROL AND STATUS REGISTER Positions
+ */
+typedef enum
+{
+	B0BFM_POS	=	0,				///< @brief !Rx0BF Pin Operation mode bit position
+	B1BFM_POS	=	1,				///< @brief !Rx1BF Pin Operation mode bit position
+	B0BFE_POS	=	2,				///< @brief !Rx0BF Pin function Enable bit position
+	B1BFE_POS	=	3,	 			///< @brief !Rx1BF Pin function Enable bit position
+	B0BFS_POS	=	4,				///< @brief !Rx0BF Pin State bit position
+	B1BFS_POS	=	5				///< @brief !Rx1BF Pin State bit position
+}mcp25625_bfpctrl_pos_t;
 
 /**
  * @union mcp25625_bfpctrl_t
@@ -318,32 +299,30 @@ typedef enum
  */
 typedef union
 {
-	uint8_t register_byte;					///< Whole register
+	uint8_t register_byte;					///< @brief Whole register
 	struct
 	{
-		uint8_t b0bfm		:1;		///< !Rx0BF Pin Operation mode\n
-		//!< 1 = Pin is used as an interrupt when a valid message is loaded into RXB0\n
-		//!< 0 = Digital Output mode.
-		uint8_t b1bfm		:1;		///< !Rx1BF Pin Operation mode\n
+		uint8_t b0bfm		:1;		///< @brief !Rx0BF Pin Operation mode\n
+		///< 1 = Pin is used as an interrupt when a valid message is loaded into RXB0\n
+		///< 0 = Digital Output mode.
+		uint8_t b1bfm		:1;		///< @brief !Rx1BF Pin Operation mode\n
 		//!< 1 = Pin is used as an interrupt when a valid message is loaded into RXB1\n
 		//!< 0 = Digital Output mode.
-		uint8_t b0bfe		:1;		///< !Rx0BF Pin function Enable\n
-		//!< 1 = Pin function is enabled, operation mode is determined by the B0BFM bit\n
+		uint8_t b0bfe		:1;		///< @brief !Rx0BF Pin function Enable\n
+		//!<  1 = Pin function is enabled, operation mode is determined by the B0BFM bit\n
 		//!< 0 = Pin function is disabled, pin goes to the high-impedance state.
-		uint8_t b1bfe		:1;		///< !Rx1BF Pin function Enable\n
-		//!< 1 = Pin function is enabled, operation mode is determined by the B1BFM bit\n
+		uint8_t b1bfe		:1;		///< @brief !Rx1BF Pin function Enable\n
+		//!<  1 = Pin function is enabled, operation mode is determined by the B1BFM bit\n
 		//!< 0 = Pin function is disabled, pin goes to the high-impedance state.
-		uint8_t b0bfs		:1;	///< !Rx0BF Pin State bit\n
-		//!< Reads as ‘0’ when Rx0BF is configured as an interrupt.
-		//!<
-		uint8_t b1bfs		:1;		///< Rx1BF Pin State bit\n
-		//!< Reads as ‘0’ when Rx1BF is configured as an interrupt.
-		//!<
-		uint8_t				:2;		///< Unimplemented
-		//!< Read as ‘0’
+		uint8_t b0bfs		:1;	///< @brief !Rx0BF Pin State bit\n
+		//!<  Reads as ‘0’ when Rx0BF is configured as an interrupt.
+		uint8_t b1bfs		:1;		///< @brief Rx1BF Pin State bit\n
+		//!<  Reads as ‘0’ when Rx1BF is configured as an interrupt.
+		uint8_t				:2;		///< @brief Unimplemented
+		//!<  Read as ‘0’
 		//!<
 	};
-}mcp25625_bfpctrl_t;
+}mcp25625_bfpctrl_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * TXRTSCTRL: !TxnRTS PIN CONTROL AND STATUS REGISTER
@@ -355,13 +334,27 @@ typedef union
  */
 typedef enum
 {
-	B0RTSM	=	0x01,			///< !Tx0RTS Pin mode bit Mask
-	B1RTSM	=	0x02,			///< !Tx1RTS Pin mode bit Mask
-	B2RTSM	=	0x04,			///< !Tx2RTS Pin mode bit Mask
-	B0RTS	=	0x08,			///< !Tx0RTS Pin State bit Mask
-	B1RTS	=	0x10,			///< !Tx1RTS Pin State bit Mask
-	B2RTS	=	0x20			///< !Tx2RTS Pin State bit Mask
+	B0RTSM		=	0x01,			///< @brief !Tx0RTS Pin mode bit Mask
+	B1RTSM		=	0x02,			///< @brief !Tx1RTS Pin mode bit Mask
+	B2RTSM		=	0x04,			///< @brief !Tx2RTS Pin mode bit Mask
+	B0RTS		=	0x08,			///< @brief !Tx0RTS Pin State bit Mask
+	B1RTS		=	0x10,			///< @brief !Tx1RTS Pin State bit Mask
+	B2RTS		=	0x20			///< @brief !Tx2RTS Pin State bit Mask
 }mcp25625_txrtsctrl_mask_t;
+
+/**
+ * @enum mcp25625_txrtsctrl_pos_t
+ * @brief !TxnRTS PIN CONTROL AND STATUS REGISTER Positions
+ */
+typedef enum
+{
+	B0RTSM_POS		=	0,			///< @brief !Tx0RTS Pin mode bit Mask
+	B1RTSM_POS		=	1,			///< @brief !Tx1RTS Pin mode bit Mask
+	B2RTSM_POS		=	2,			///< @brief !Tx2RTS Pin mode bit Mask
+	B0RTS_POS		=	3,			///< @brief !Tx0RTS Pin State bit Mask
+	B1RTS_POS		=	4,			///< @brief !Tx1RTS Pin State bit Mask
+	B2RTS_POS		=	5			///< @brief !Tx2RTS Pin State bit Mask
+}mcp25625_txrtsctrl_pos_t;
 
 /**
  * @union mcp25625_txrtsctrl_t
@@ -394,7 +387,7 @@ typedef union
 		//!< Read as ‘0’.
 		//!<
 	};
-}mcp25625_txrtsctrl_t;
+}mcp25625_txrtsctrl_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * CANSTAT: CAN STATUS REGISTER
@@ -406,15 +399,26 @@ typedef union
  */
 typedef enum
 {
-	ICOD	=	0x0E,			///< Operation Mode bits Mask
-	ICOD_0	=	0x02,			///< Operation Mode bit 0 Mask
-	ICOD_1	=	0x04,			///< Operation Mode bit 1 Mask
-	ICOD_2	=	0x08,			///< Operation Mode bit 2 Mask
-	OPMOD	=	0xE0,			///< Interrupt Flag Code bits Mask
-	OPMOD_0	=	0x20,			///< Interrupt Flag Code bit 0 Mask
-	OPMOD_1	=	0x40,			///< Interrupt Flag Code bit 1 Mask
-	OPMOD_2	=	0x80,			///< Interrupt Flag Code bit 2 Mask
+	ICOD	=	0x0E,			///< @brief Operation Mode bits Mask
+	ICOD_0	=	0x02,			///< @brief Operation Mode bit 0 Mask
+	ICOD_1	=	0x04,			///< @brief Operation Mode bit 1 Mask
+	ICOD_2	=	0x08,			///< @brief Operation Mode bit 2 Mask
+	OPMOD	=	0xE0,			///< @brief Interrupt Flag Code bits Mask
+	OPMOD_0	=	0x20,			///< @brief Interrupt Flag Code bit 0 Mask
+	OPMOD_1	=	0x40,			///< @brief Interrupt Flag Code bit 1 Mask
+	OPMOD_2	=	0x80,			///< @brief Interrupt Flag Code bit 2 Mask
 }mcp25625_canstat_mask_t;
+
+
+/**
+ * @enum mcp25625_canstat_pos_t
+ * @brief CAN STATUS REGISTER Position
+ */
+typedef enum
+{
+	ICOD_POS	=	1,			///< @brief Operation Mode bits position
+	OPMOD_POS	=	5,			///< @brief Interrupt Flag Code bits Mask
+}mcp25625_canstat_pos_t;
 
 /**
  * @union mcp25625_canstat_t
@@ -436,7 +440,7 @@ typedef union
 		mcp25625_opmode_t opmode	:3;		///< Operation Mode
 		//!<
 	};
-}mcp25625_canstat_t;
+}mcp25625_canstat_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * CANCTRL: CAN CONTROL REGISTER
@@ -448,17 +452,30 @@ typedef union
  */
 typedef enum
 {
-	CLKPRE		=	0x03,		///< CLKOUT Pin Prescaler bits Mask
-	CLKPRE0		=	0x01,		///< CLKOUT Pin Prescaler bit 0 Mask
-	CLKPRE1		=	0x02,		///< CLKOUT Pin Prescaler bit 1 Mask
-	CLKEN		=	0x04,		///< CLKOUT Pin Enable bit Mask
-	OSM			=	0x08,		///< One-Shot Mode bit Mask
-	ABAT		=	0x10,		///< Abort All Pending Transmissions bit Mask
-	REQOP		=	0xE0,		///< Request Operation mode bits Mask
-	REQOP0		=	0x02,		///< Request Operation mode bit 0 Mask
-	REQOP1		=	0x04,		///< Request Operation mode bit 1 Mask
-	REQOP2		=	0x08		///< Request Operation mode bit 2 Mask
+	CLKPRE		=	0x03,		///< @brief CLKOUT Pin Prescaler bits Mask
+	CLKPRE0		=	0x01,		///< @brief CLKOUT Pin Prescaler bit 0 Mask
+	CLKPRE1		=	0x02,		///< @brief CLKOUT Pin Prescaler bit 1 Mask
+	CLKEN		=	0x04,		///< @brief CLKOUT Pin Enable bit Mask
+	OSM			=	0x08,		///< @brief One-Shot Mode bit Mask
+	ABAT		=	0x10,		///< @brief Abort All Pending Transmissions bit Mask
+	REQOP		=	0xE0,		///< @brief Request Operation mode bits Mask
+	REQOP0		=	0x02,		///< @brief Request Operation mode bit 0 Mask
+	REQOP1		=	0x04,		///< @brief Request Operation mode bit 1 Mask
+	REQOP2		=	0x08		///< @brief Request Operation mode bit 2 Mask
 }mcp25625_canctrl_mask_t;
+
+/**
+ * @enum mcp25625_canctrl_pos_t
+ * @brief CAN CONTROL REGISTER Positions
+ */
+typedef enum
+{
+	CLKPRE_POS		=	0,		///< @brief CLKOUT Pin Prescaler bits Position
+	CLKEN_POS		=	2,		///< @brief CLKOUT Pin Enable bit Position
+	OSM_POS			=	3,		///< @brief One-Shot Mode bit Position
+	ABAT_POS		=	4,		///< @brief Abort All Pending Transmissions bit Position
+	REQOP_POS		=	5,		///< @brief Request Operation mode bits Position
+}mcp25625_canctrl_pos_t;
 
 /**
  * @union mcp25625_canctrl_t
@@ -469,7 +486,7 @@ typedef union
 	uint8_t register_byte;					///< Whole register
 	struct
 	{
-		mcp25625_prescaler_t clkpre		:3;		///< CLKOUT Pin Prescaler.
+		mcp25625_prescaler_t clkpre		:2;		///< CLKOUT Pin Prescaler.
 		//!<
 		//!<
 		uint8_t clken					:1;		///< CLKOUT Pin Enable\n
@@ -484,7 +501,7 @@ typedef union
 		mcp25625_opmode_t	reqop		:3;		///< Request Operation mode.
 		//!<
 	};
-}mcp25625_canctrl_t;
+}mcp25625_canctrl_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * TEC: Transmit Error Counter	/	REC: Receive Error Counter
@@ -502,13 +519,24 @@ typedef union
  */
 typedef enum
 {
-	PHSEG2		=	0x03,		///< PS2 Length bits Mask
-	PHSEG2_0	=	0x01,		///< PS2 Length bit 0 Mask
-	PHSEG2_1	=	0x02,		///< PS2 Length bit 1 Mask
-	PHSEG2_2	=	0x04,		///< PS2 Length bit 2 Mask
-	WAKFIL		=	0x08,		///< Wake-up Filter bit Mask
-	SOF			=	0x10,		///< Start-of-Frame Signal bit Mask
+	PHSEG2		=	0x03,		///< @brief PS2 Length bits Mask
+	PHSEG2_0	=	0x01,		///< @brief PS2 Length bit 0 Mask
+	PHSEG2_1	=	0x02,		///< @brief PS2 Length bit 1 Mask
+	PHSEG2_2	=	0x04,		///< @brief PS2 Length bit 2 Mask
+	WAKFIL		=	0x08,		///< @brief Wake-up Filter bit Mask
+	SOF			=	0x10,		///< @brief Start-of-Frame Signal bit Mask
 }mcp25625_cnf3_mask_t;
+
+/**
+ * @enum mcp25625_cnf3_pos_t
+ * @brief CONFIGURATION 3 REGISTER Positions
+ */
+typedef enum
+{
+	PHSEG2_POS		=	0,		///< @brief PS2 Length bits Position
+	WAKFIL_POS		=	6,		///< @brief Wake-up Filter bit Position
+	SOF_POS			=	7,		///< @brief Start-of-Frame Signal bit Position
+}mcp25625_cnf3_pos_t;
 
 /**
  * @union mcp25625_cnf3_t
@@ -535,7 +563,7 @@ typedef union
 		//!< If CLKEN (CANCTRL<2>) = 0:\n
 		//!< don’t care.
 	};
-}mcp25625_cnf3_t;
+}mcp25625_cnf3_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * CNF2: CONFIGURATION 2 REGISTER
@@ -547,17 +575,29 @@ typedef union
  */
 typedef enum
 {
-	PRSEG		=	0x03,		///< Propagation Segment Length bits Mask
-	PRSEG_0		=	0x01,		///< Propagation Segment Length bit 0 Mask
-	PRSEG_1		=	0x02,		///< Propagation Segment Length bit 1 Mask
-	PHSEG_2		=	0x04,		///< Propagation Segment Length bit 2 Mask
-	PHSEG1		=	0x38,		///< PS1 Length bits Mask
-	PHSEG1_0	=	0x08,		///< PS1 Length bit 0 Mask
-	PHSEG1_1	=	0x10,		///< PS1 Length bit 1 Mask
-	PHSEG1_2	=	0x20,		///< PS1 Length bit 2 Mask
-	SAM			=	0x08,		///< Wake-up Filter bit Mask
-	BLTMODE		=	0x10		///< Start-of-Frame Signal bit Mask
+	PRSEG		=	0x03,		///< @brief Propagation Segment Length bits Mask
+	PRSEG_0		=	0x01,		///< @brief Propagation Segment Length bit 0 Mask
+	PRSEG_1		=	0x02,		///< @brief Propagation Segment Length bit 1 Mask
+	PHSEG_2		=	0x04,		///< @brief Propagation Segment Length bit 2 Mask
+	PHSEG1		=	0x38,		///< @brief PS1 Length bits Mask
+	PHSEG1_0	=	0x08,		///< @brief PS1 Length bit 0 Mask
+	PHSEG1_1	=	0x10,		///< @brief PS1 Length bit 1 Mask
+	PHSEG1_2	=	0x20,		///< @brief PS1 Length bit 2 Mask
+	SAM			=	0x08,		///< @brief Wake-up Filter bit Mask
+	BLTMODE		=	0x10		///< @brief Start-of-Frame Signal bit Mask
 }mcp25625_cnf2_mask_t;
+
+/**
+ * @enum mcp25625_cnf2_pos_t
+ * @brief CONFIGURATION 2 REGISTER Masks
+ */
+typedef enum
+{
+	PRSEG_POS		=	0,		///< @brief Propagation Segment Length bits Position
+	PHSEG1_POS		=	3,		///< @brief PS1 Length bits Position
+	SAM_POS			=	6,		///< @brief Wake-up Filter bit Position
+	BLTMODE_POS		=	7		///< @brief Start-of-Frame Signal bit Position
+}mcp25625_cnf2_pos_t;
 
 /**
  * @union mcp25625_cnf2_t
@@ -581,7 +621,7 @@ typedef union
 		//!< 1 = Length of PS2 is determined by the PHSEG2<2:0> bits of CNF3\n
 		//!< 0 = Length of PS2 is the greater of PS1 and IPT (2 TQ).
 	};
-}mcp25625_cnf2_t;
+}mcp25625_cnf2_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * CNF1: CONFIGURATION 1 REGISTER
@@ -593,17 +633,27 @@ typedef union
  */
 typedef enum
 {
-	BRP			=	0x3F,		///< Baud Rate Prescaler bits Mask
-	BRP_0		=	0x01,		///< Baud Rate Prescaler bit 0 Mask
-	BRP_1		=	0x02,		///< Baud Rate Prescaler bit 1 Mask
-	BRP_2		=	0x04,		///< Baud Rate Prescaler bit 2 Mask
-	BRP_3		=	0x08,		///< Baud Rate Prescaler bit 3 Mask
-	BRP_4		=	0x10,		///< Baud Rate Prescaler bit 4 Mask
-	BRP_5		=	0x20,		///< Baud Rate Prescaler bit 5 Mask
-	SJW			=	0xC0,		///< Synchronization Jump Width Length bits Mask
-	SJW_0		=	0xC0,		///< Synchronization Jump Width Length bit 0 Mask
-	SJW_1		=	0xC0		///< Synchronization Jump Width Length bit 1 Mask
+	BRP			=	0x3F,		///< @brief Baud Rate Prescaler bits Mask
+	BRP_0		=	0x01,		///< @brief Baud Rate Prescaler bit 0 Mask
+	BRP_1		=	0x02,		///< @brief Baud Rate Prescaler bit 1 Mask
+	BRP_2		=	0x04,		///< @brief Baud Rate Prescaler bit 2 Mask
+	BRP_3		=	0x08,		///< @brief Baud Rate Prescaler bit 3 Mask
+	BRP_4		=	0x10,		///< @brief Baud Rate Prescaler bit 4 Mask
+	BRP_5		=	0x20,		///< @brief Baud Rate Prescaler bit 5 Mask
+	SJW			=	0xC0,		///< @brief Synchronization Jump Width Length bits Mask
+	SJW_0		=	0xC0,		///< @brief Synchronization Jump Width Length bit 0 Mask
+	SJW_1		=	0xC0		///< @brief Synchronization Jump Width Length bit 1 Mask
 }mcp25625_cnf1_mask_t;
+
+/**
+ * @enum mcp25625_cnf1_pos_t
+ * @brief CONFIGURATION 1 REGISTER Positions
+ */
+typedef enum
+{
+	BRP_POS			=	0,			///< Baud Rate Prescaler bits Position
+	SJW_POS			=	6,			///< Synchronization Jump Width Length bits Position
+}mcp25625_cnf1_pos_t;
 
 /**
  * @union mcp25625_cnf1_t
@@ -621,7 +671,7 @@ typedef union
 		//!< nm = Length = ((nm+1)*TQ) (See datasheet).
 		//!<
 	};
-}mcp25625_cnf1_t;
+}mcp25625_cnf1_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * CANINTE: CAN INTERRUPT ENABLE REGISTER
@@ -633,15 +683,31 @@ typedef union
  */
 typedef enum
 {
-	RX0IE		=	0x01,		///< Receive Buffer 0 Full Interrupt Enable bit Mask
-	RX1IE		=	0x02,		///< Receive Buffer 1 Full Interrupt Enable bit Mask
-	TX0IE		=	0x04,		///< Transmit Buffer 0 Empty Interrupt Enable bit Mask
-	TX1IE		=	0x08,		///< Transmit Buffer 1 Empty Interrupt Enable bit Mask
-	TX2IE		=	0x10,		///< Transmit Buffer 2 Empty Interrupt Enable bit Mask
-	ERRIE		=	0x20,		///< Error Interrupt Enable bit Mask (multiple sources in the EFLG register)
-	WAKIE		=	0x40,		///< Wake-up Interrupt Enable bit Mask
-	MERRE		=	0x80		///< Message Error Interrupt Enable bit Mask
+	RX0IE		=	0x01,		///< @brief Receive Buffer 0 Full Interrupt Enable bit Mask
+	RX1IE		=	0x02,		///< @brief Receive Buffer 1 Full Interrupt Enable bit Mask
+	TX0IE		=	0x04,		///< @brief Transmit Buffer 0 Empty Interrupt Enable bit Mask
+	TX1IE		=	0x08,		///< @brief Transmit Buffer 1 Empty Interrupt Enable bit Mask
+	TX2IE		=	0x10,		///< @brief Transmit Buffer 2 Empty Interrupt Enable bit Mask
+	ERRIE		=	0x20,		///< @brief Error Interrupt Enable bit Mask (multiple sources in the EFLG register)
+	WAKIE		=	0x40,		///< @brief Wake-up Interrupt Enable bit Mask
+	MERRE		=	0x80		///< @brief Message Error Interrupt Enable bit Mask
 }mcp25625_caninte_mask_t;
+
+/**
+ * @enum mcp25625_caninte_pos_t
+ * @brief CAN INTERRUPT ENABLE REGISTER Masks
+ */
+typedef enum
+{
+	RX0IE_POS		=	0,		///< @brief Receive Buffer 0 Full Interrupt Enable bit Position
+	RX1IE_POS		=	1,		///< @brief Receive Buffer 1 Full Interrupt Enable bit Position
+	TX0IE_POS		=	2,		///< @brief Transmit Buffer 0 Empty Interrupt Enable bit Position
+	TX1IE_POS		=	3,		///< @brief Transmit Buffer 1 Empty Interrupt Enable bit Position
+	TX2IE_POS		=	4,		///< @brief Transmit Buffer 2 Empty Interrupt Enable bit Position
+	ERRIE_POS		=	5,		///< @brief Error Interrupt Enable bit Position (multiple sources in the EFLG register)
+	WAKIE_POS		=	6,		///< @brief Wake-up Interrupt Enable bit Position
+	MERRE_POS		=	7		///< @brief Message Error Interrupt Enable bit Position
+}mcp25625_caninte_pos_t;
 
 /**
  * @union mcp25625_caninte_t
@@ -677,7 +743,7 @@ typedef union
 		//!< true:	Interrupt on error during message reception or transmission\n
 		//!< 0 = Disabled.
 	};
-}mcp25625_caninte_t;
+}mcp25625_caninte_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * CANINTF: CAN INTERRUPT FLAG REGISTER
@@ -689,15 +755,31 @@ typedef union
  */
 typedef enum
 {
-	RX0IF		=	0x01,		///< Receive Buffer 0 Full Interrupt Enable bit Mask
-	RX1IF		=	0x02,		///< Receive Buffer 1 Full Interrupt Enable bit Mask
-	TX0IF		=	0x04,		///< Transmit Buffer 0 Empty Interrupt Enable bit Mask
-	TX1IF		=	0x08,		///< Transmit Buffer 1 Empty Interrupt Enable bit Mask
-	TX2IF		=	0x10,		///< Transmit Buffer 2 Empty Interrupt Enable bit Mask
-	ERRIF		=	0x20,		///< Error Interrupt Flag bit Mask (multiple sources in the EFLG register)
-	WAKIF		=	0x40,		///< Wake-up Interrupt Flag bit Mask
-	MERRF		=	0x80		///< Message Error Interrupt Flag bit Mask
+	RX0IF		=	0x01,		///< @brief Receive Buffer 0 Full Interrupt Enable bit Mask
+	RX1IF		=	0x02,		///< @brief Receive Buffer 1 Full Interrupt Enable bit Mask
+	TX0IF		=	0x04,		///< @brief Transmit Buffer 0 Empty Interrupt Enable bit Mask
+	TX1IF		=	0x08,		///< @brief Transmit Buffer 1 Empty Interrupt Enable bit Mask
+	TX2IF		=	0x10,		///< @brief Transmit Buffer 2 Empty Interrupt Enable bit Mask
+	ERRIF		=	0x20,		///< @brief Error Interrupt Flag bit Mask (multiple sources in the EFLG register)
+	WAKIF		=	0x40,		///< @brief Wake-up Interrupt Flag bit Mask
+	MERRF		=	0x80		///< @brief Message Error Interrupt Flag bit Mask
 }mcp25625_canintf_mask_t;
+
+/**
+ * @enum mcp25625_canintf_pos_t
+ * @brief CAN INTERRUPT FLAG REGISTER Masks
+ */
+typedef enum
+{
+	RX0IF_POS		=	0,		///< @brief Receive Buffer 0 Full Interrupt Enable bit Position
+	RX1IF_POS		=	1,		///< @brief Receive Buffer 1 Full Interrupt Enable bit Position
+	TX0IF_POS		=	2,		///< @brief Transmit Buffer 0 Empty Interrupt Enable bit Position
+	TX1IF_POS		=	3,		///< @brief Transmit Buffer 1 Empty Interrupt Enable bit Position
+	TX2IF_POS		=	4,		///< @brief Transmit Buffer 2 Empty Interrupt Enable bit Position
+	ERRIF_POS		=	5,		///< @brief Error Interrupt Flag bit Position (multiple sources in the EFLG register)
+	WAKIF_POS		=	6,		///< @brief Wake-up Interrupt Flag bit Position
+	MERRF_POS		=	7		///< @brief Message Error Interrupt Flag bit Position
+}mcp25625_canintf_pos_t;
 
 /**
  * @union mcp25625_canintf_t
@@ -733,7 +815,7 @@ typedef union
 		//!< true:	Interrupt pending (must be cleared by MCU to reset interrupt condition)\n
 		//!< 0 = No interrupt pending.
 	};
-}mcp25625_canintf_t;
+}mcp25625_canintf_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * EFLG: ERROR FLAG REGISTER
@@ -745,15 +827,31 @@ typedef union
  */
 typedef enum
 {
-	EWARN		=	0x01,			///< Error Warning Flag bit
-	RXWAR		=	0x02,			///< Receive Error Warning Flag bit
-	TXWAR		=	0x04,			///< Transmit Error Warning Flag bit
-	RXEP		=	0x08,			///< Receive Error-Passive Flag bit
-	TXEP		=	0x10,			///< Transmit Error-Passive Flag bit
-	TXBO		=	0x20,			///< Bus-Off Error Flag bit
-	TX0OVR		=	0x40,			///< Receive Buffer 0 Overflow Flag bit
-	RX1OVR		=	0x80			///< Receive Buffer 1 Overflow Flag bit
+	EWARN		=	0x01,			///< @brief Error Warning Flag bit Mask
+	RXWAR		=	0x02,			///< @brief Receive Error Warning Flag bit Mask
+	TXWAR		=	0x04,			///< @brief Transmit Error Warning Flag bit Mask
+	RXEP		=	0x08,			///< @brief Receive Error-Passive Flag bit Mask
+	TXEP		=	0x10,			///< @brief Transmit Error-Passive Flag bit Mask
+	TXBO		=	0x20,			///< @brief Bus-Off Error Flag bit Mask
+	TX0OVR		=	0x40,			///< @brief Receive Buffer 0 Overflow Flag bit Mask
+	RX1OVR		=	0x80			///< @brief Receive Buffer 1 Overflow Flag bit Mask
 }mcp25625_eflg_mask_t;
+
+/**
+ * @enum mcp25625_eflg_pos_t
+ * @brief ERROR FLAG REGISTER Position
+ */
+typedef enum
+{
+	EWARN_POS		=	0,			///< @brief Error Warning Flag bit Position
+	RXWAR_POS		=	1,			///< @brief Receive Error Warning Flag bit Position
+	TXWAR_POS		=	2,			///< @brief Transmit Error Warning Flag bit Position
+	RXEP_POS		=	3,			///< @brief Receive Error-Passive Flag bit Position
+	TXEP_POS		=	4,			///< @brief Transmit Error-Passive Flag bit Position
+	TXBO_POS		=	5,			///< @brief Bus-Off Error Flag bit Position
+	TX0OVR_POS		=	6,			///< @brief Receive Buffer 0 Overflow Flag bit Position
+	RX1OVR_POS		=	7			///< @brief Receive Buffer 1 Overflow Flag bit Position
+}mcp25625_eflg_pos_t;
 
 /**
  * @union mcp25625_eflg_t
@@ -789,7 +887,7 @@ typedef union
 		//!< Sets when a valid message is received for RXB1 and the RX1IF bit in the CANINTF register is ‘1’\n
 		//!< Must be reset by MCU.
 	};
-}mcp25625_eflg_t;
+}mcp25625_eflg_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  *  TXBxCTRL: TRANSMIT BUFFER x CONTROL REGISTER
@@ -801,14 +899,27 @@ typedef union
  */
 typedef enum
 {
-	TXP  		=	0x03,			///< Transmit Buffer Priority bits Mask
-	TXP_0		=	0x01,			///< Transmit Buffer Priority bit 0 Mask
-	TXP_1		=	0x02,			///< Transmit Buffer Priority bit 1 Mask
-	TXREQ		=	0x08,			///< Message Transmit Request bit Mask
-	TXERR		=	0x10,			///< Transmission Error Detected bit Mask
-	MLOA		=	0x20,			///< Message Lost Arbitration bit Mask
-	ABFT		=	0x40			///< Message Aborted Flag bit Mask
+	TXP  		=	0x03,			///< @brief Transmit Buffer Priority bits Mask
+	TXP_0		=	0x01,			///< @brief Transmit Buffer Priority bit 0 Mask
+	TXP_1		=	0x02,			///< @brief Transmit Buffer Priority bit 1 Mask
+	TXREQ		=	0x08,			///< @brief Message Transmit Request bit Mask
+	TXERR		=	0x10,			///< @brief Transmission Error Detected bit Mask
+	MLOA		=	0x20,			///< @brief Message Lost Arbitration bit Mask
+	ABFT		=	0x40			///< @brief Message Aborted Flag bit Mask
 }mcp25625_txbxctrl_mask_t;
+
+/**
+ * @enum mcp25625_txbxctrl_pos_t
+ * @brief MCP25625 TRANSMIT BUFFER x CONTROL REGISTER Position
+ */
+typedef enum
+{
+	TXP_POS  		=	0,			///< @brief Transmit Buffer Priority bits Mask
+	TXREQ_POS		=	3,			///< @brief Message Transmit Request bit Mask
+	TXERR_POS		=	4,			///< @brief Transmission Error Detected bit Mask
+	MLOA_POS		=	5,			///< @brief Message Lost Arbitration bit Mask
+	ABFT_POS		=	6			///< @brief Message Aborted Flag bit Mask
+}mcp25625_txbxctrl_pos_t;
 
 /**
  * @union mcp25625_txbxctrl_t
@@ -842,7 +953,7 @@ typedef union
 		//!< Read as ‘0’.
 		//!<
 	};
-}mcp25625_txbxctrl_t;
+}mcp25625_txbxctrl_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  *  RXBxCTRL: RECEIVE BUFFER x CONTROL REGISTERS: RXB0CTRL / RXB1CTRL
@@ -854,18 +965,31 @@ typedef union
  */
 typedef enum
 {
-	FILHIT__0	=		0x01,		///< Filter Hit bits Mask (RXB0CTRL)
-	FILHIT__1	=		0x03,		///< Filter Hit bits Mask (RXB1CTRL)
-	FILHIT_0	=		0x01,		///< Filter Hit bit 0 Mask
-	BUKT1		=		0x02,		///< Read-Only Copy of BUKT bit (used internally by the MCP25625) Mask (RXB0CTRL)
-	FILHIT_1	=		0x02,		///< Filter Hit bit 1 Mask (RXB1CTRL)
-	BUKT		=		0x04,		///< Rollover Enable bit Mask (RXB0CTRL)
-	FILHIT_2	=		0x04,		///< Filter Hit bit 2 Mask (RXB1CTRL)
-	RXRTR		=		0x08,		///< Received Remote Transfer Request bit Mask
-	RXM			=		0x60,		///< Receive Buffer Operating mode bits Mask
-	RXM_0 		= 		0x20,		///< Receive Buffer Operating mode bit 0 Mask
-	RXM_1 		= 		0x40		///< Receive Buffer Operating mode bit 1 Mask
+	FILHIT__0	=		0x01,		///< @brief Filter Hit bits Mask (RXB0CTRL)
+	FILHIT__1	=		0x03,		///< @brief Filter Hit bits Mask (RXB1CTRL)
+	FILHIT_0	=		0x01,		///< @brief Filter Hit bit 0 Mask
+	BUKT1		=		0x02,		///< @brief Read-Only Copy of BUKT bit (used internally by the MCP25625) Mask (RXB0CTRL)
+	FILHIT_1	=		0x02,		///< @brief Filter Hit bit 1 Mask (RXB1CTRL)
+	BUKT		=		0x04,		///< @brief Roll over Enable bit Mask (RXB0CTRL)
+	FILHIT_2	=		0x04,		///< @brief Filter Hit bit 2 Mask (RXB1CTRL)
+	RXRTR		=		0x08,		///< @brief Received Remote Transfer Request bit Mask
+	RXM			=		0x60,		///< @brief Receive Buffer Operating mode bits Mask
+	RXM_0 		= 		0x20,		///< @brief Receive Buffer Operating mode bit 0 Mask
+	RXM_1 		= 		0x40		///< @brief Receive Buffer Operating mode bit 1 Mask
 }mcp25625_rxbxctrl_mask_t;
+
+/**
+ * @enum mcp25625_rxbxctrl_pos_t
+ * @brief RXBxCTRL: RECEIVE BUFFER x CONTROL REGISTER Position
+ */
+typedef enum
+{
+	FILHIT_POS		=		1,		///< @brief Filter Hit bits Mask Position
+	BUKT1_POS		=		2,		///< @brief Read-Only Copy of BUKT bit (used internally by the MCP25625) Position (RXB0CTRL)
+	BUKT_POS		=		3,		///< @brief Rollover Enable bit Position (RXB0CTRL)
+	RXRTR_POS		=		4,		///< @brief Received Remote Transfer Request bit Position
+	RXM_POS			=		5,		///< @brief Receive Buffer Operating mode bits Position
+}mcp25625_rxbxctrl_pos_t;
 
 /**
  * @union mcp25625_rxb0ctrl_t
@@ -876,7 +1000,6 @@ typedef union
 	uint8_t register_byte;					///< Whole register
 	struct
 	{
-		//TODO: Ignore warning?
 		mcp25625_accfltr_rxb0_id_t filhit	:1;	///< Filter Hit
 		//!< Indicates which acceptance filter enabled the reception of a message (RXF0 or RXF1)\n
 		//!< If a rollover from RXB0 to RXB1 occurs, the FILHIT0 bit will reflect the filter that accepted the message
@@ -902,7 +1025,7 @@ typedef union
 		//!< Read as ‘0’.
 		//!<
 	};
-}mcp25625_rxb0ctrl_t;
+}mcp25625_rxb0ctrl_t __attribute__((__aligned__(1)));
 
 /**
  * @union mcp25625_rxb1ctrl_t
@@ -929,7 +1052,7 @@ typedef union
 		//!< Read as ‘0’.
 		//!<
 	};
-}mcp25625_rxb1ctrl_t;
+}mcp25625_rxb1ctrl_t  __attribute__((__aligned__(1)));;
 
 /*******************************************************************************
  *******************************************************************************
@@ -953,7 +1076,7 @@ typedef struct
 	uint8_t	sid_h					:8;		///< Standard Identifier high part\n
 	//!< Refer to datasheet.
 	//!<
-}mcp25625_sidh_t;
+}mcp25625_sidh_t __attribute__((__aligned__(1)));;
 
 /******************************************************************************
  *  SIDL: STANDARD IDENTIFIER LOW REGISTER
@@ -982,7 +1105,7 @@ typedef struct
 	uint8_t	sid_l		:3;		///< Standard Identifier low part\n
 	//!< Refer to datasheet
 	//!<
-}mcp25625_sidl_t;
+}mcp25625_sidl_t __attribute__((__aligned__(1)));;
 
 /******************************************************************************
  *  EID8: EXTENDED IDENTIFIER HIGH REGISTER
@@ -999,7 +1122,7 @@ typedef struct	//Using union for uniform code
 	uint8_t	eid_h					:8;		///< Extended Identifier high part\n
 	//!< Refer to datasheet.
 	//!<
-}mcp25625_eid8_t;
+}mcp25625_eid8_t __attribute__((__aligned__(1)));;
 
 /******************************************************************************
  *  EID0: EXTENDED IDENTIFIER LOW REGISTER
@@ -1016,7 +1139,7 @@ typedef struct	//Using union for uniform code
 	uint8_t	eid_l					:8;		///< Extended Identifier low part\n
 	//!< Refer to datasheet.
 	//!<
-}mcp25625_eid0_t;
+}mcp25625_eid0_t __attribute__((__aligned__(1)));;
 
 /******************************************************************************
  *  DLC: DATA LENGTH CODE REGISTER
@@ -1042,7 +1165,7 @@ typedef struct	//Using union for uniform code
 	uint8_t						:1;		///< Unimplemented
 	//!< Read as ‘0’
 	//!<
-}mcp25625_dlc_t;
+}mcp25625_dlc_t __attribute__((__aligned__(1)));;
 
 /*******************************************************************************
  *******************************************************************************
@@ -1062,11 +1185,11 @@ typedef struct	//Using union for uniform code
  */
 typedef struct	//Using union for uniform code
 {
-	mcp25625_sidh_t sidh;		///< STANDARD IDENTIFIER HIGH REGISTER
-	mcp25625_sidl_t sidl;		///< STANDARD IDENTIFIER LOW REGISTER
-	mcp25625_eid8_t eid8;		///< EXTENDED IDENTIFIER HIGH REGISTER.
-	mcp25625_eid0_t eid0;		///< EXTENDED IDENTIFIER LOW REGISTER.
-}mcp25625_id_t;
+	mcp25625_sidh_t sidh; 		///< @brief STANDARD IDENTIFIER HIGH REGISTER
+	mcp25625_sidl_t sidl;		///< @brief STANDARD IDENTIFIER LOW REGISTER
+	mcp25625_eid8_t eid8;		///< @brief EXTENDED IDENTIFIER HIGH REGISTER.
+	mcp25625_eid0_t eid0;		///< @brief EXTENDED IDENTIFIER LOW REGISTER.
+}mcp25625_id_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * DATA: Data structure
@@ -1078,9 +1201,9 @@ typedef struct	//Using union for uniform code
  */
 typedef struct	//Using union for uniform code
 {
-	mcp25625_dlc_t dlc;			///< DATA LENGTH CODE
-	uint8_t	buffer[8];			///< Data Buffer
-}mcp25625_data_t;
+	mcp25625_dlc_t dlc;			///< @brief DATA LENGTH CODE
+	uint8_t	buffer[8];			///< @brief Data Buffer
+}mcp25625_data_t __attribute__((__aligned__(1)));
 
 /******************************************************************************
  * BUFFER_DATA: ID + DATA
@@ -1095,7 +1218,7 @@ typedef struct	//Using union for uniform code
 {
 	mcp25625_id_t id;			///< ID
 	mcp25625_data_t	data;		///< DLC + buffer
-}mcp25625_id_data_t;
+}mcp25625_id_data_t __attribute__((__aligned__(1)));
 
 /*******************************************************************************
  *******************************************************************************
@@ -1113,15 +1236,15 @@ typedef struct	//Using union for uniform code
  */
 typedef struct	//Using union for uniform code
 {
-	uint8_t	rx0if		:1;			///< RX0IF (CANINTF Register)
-	uint8_t rx1if		:1;			///< RX1IF (CANINTF Register)
-	uint8_t txreq0		:1;			///< TXREQ (TXB0CTRL Register)
-	uint8_t tx0if		:1;			///< TX0IF (CANINTF Register)
-	uint8_t txreq1		:1;			///< TXREQ (TXB1CTRL Register)
-	uint8_t tx1if		:1;			///< TX1IF (CANINTF Register)
-	uint8_t txreq2		:1;			///< TXREQ (TXB2CTRL Register)
-	uint8_t tx2if		:1;			///< TX2IF (CANINTF Register)
-}mcp25625_status_t;
+	uint8_t	rx0if		:1;			///< @brief RX0IF (CANINTF Register)
+	uint8_t rx1if		:1;			///< @brief RX1IF (CANINTF Register)
+	uint8_t txreq0		:1;			///< @brief TXREQ (TXB0CTRL Register)
+	uint8_t tx0if		:1;			///< @brief TX0IF (CANINTF Register)
+	uint8_t txreq1		:1;			///< @brief TXREQ (TXB1CTRL Register)
+	uint8_t tx1if		:1;			///< @brief TX1IF (CANINTF Register)
+	uint8_t txreq2		:1;			///< @brief TXREQ (TXB2CTRL Register)
+	uint8_t tx2if		:1;			///< @brief TX2IF (CANINTF Register)
+}mcp25625_status_t __attribute__((__aligned__(1)));;
 
 /******************************************************************************
  * RX_STATUS: Information about which filter matched the message
@@ -1135,10 +1258,10 @@ typedef struct	//Using union for uniform code
  */
 typedef struct	//Using union for uniform code
 {
-	mcp25625_accfltr_id_t filter_match		:3;		///< Filter Match
-	mcp25625_msg_type_t msg_type			:3;		///< Msg Type Received
-	mcp25625_rec_msg_info_t msg_info		:3;		///< Received Message Buffer
-}mcp25625_rx_status_t;
+	mcp25625_accfltr_id_t filter_match		:3;		///< @brief Filter Match
+	mcp25625_msg_type_t msg_type			:3;		///< @brief Msg Type Received
+	mcp25625_rec_msg_info_t msg_info		:3;		///< @brief Received Message Buffer
+}mcp25625_rx_status_t __attribute__((__aligned__(1)));;
 
 
 /*******************************************************************************
@@ -1163,19 +1286,26 @@ void mcp25625_reset(void);
 void mcp25625_write(mcp25625_addr_t addr, size_t length, const uint8_t *p_data);
 
 /**
- * @brief read data from mcp25625 single register.
- * @param addr Register's Address..
- * @return Register content.
- */
-uint8_t mcp25625_read_register(mcp25625_addr_t addr);
-
-/**
  * @brief read data from mcp25625.
  * @param addr Address where to start reading data.
  * @param length Total bytes to read.
  * @param p_data pointer to data where to write read data.
  */
 void mcp25625_read(mcp25625_addr_t addr, size_t length, uint8_t *p_data);
+
+/**
+ * @brief write data to mcp25625 single register.
+ * @param addr Register's Address.
+ * @param data Value to write.
+ */
+void mcp25625_write_register(mcp25625_addr_t addr, uint8_t data);
+
+/**
+ * @brief read data from mcp25625 single register.
+ * @param addr Register's Address.
+ * @return Register content.
+ */
+uint8_t mcp25625_read_register(mcp25625_addr_t addr);
 
 /**
  * @brief Modify bits in register using mask.
@@ -1244,12 +1374,5 @@ mcp25625_status_t mcp25625_read_status(void);
  * @return Struct with RX Status.
  */
 mcp25625_rx_status_t mcp25625_read_rx_status(void);
-
-//Higher level functions
-void mcp25625_request_mode(mcp25625_opmode_t opmode);
-mcp25625_opmode_t mcp25625_get_mode(void);
-void mcp25625_configure_acceptance_filter(mcp25625_accfltr_id_t filter_id, const mcp25625_accfltr_id_t *p_filter_id);
-void mcp25625_configure_acceptance_mask(mcp25625_accmsk_id_t mask_id, const mcp25625_accfltr_id_t *p_mask_id);
-
 
 #endif /* CAN_MCP25625_MCP25625_DRIVER_H_ */
