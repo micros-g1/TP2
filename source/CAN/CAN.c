@@ -14,9 +14,9 @@
 // Then K = TBIT x FOSC / N
 // SYNC_T = 1xTQ
 
-#define PROPSEG_QUANTA 4
-#define PHSEG1_QUANTA 1
-#define PHSEG2_QUANTA 2
+#define PROPSEG_QUANTA 4u
+#define PHSEG1_QUANTA 1u
+#define PHSEG2_QUANTA 2u
 
 #define ID_MASK ~0x07	//3 lsb can take any value.
 #define ID_FILTER 0		//Combined with ID_MASK, all bits except the first 3 bits must be zero.
@@ -62,7 +62,7 @@ void CAN_init()
 	mcp25625_reset();
 	//Configure Timing (and set BLTMODE so that value of PHSEG2 is set by PHSEG2 bits in CNF3)
 	mcp25625_bit_modify(CNF1_ADDR, BRP, BRP_VALUE<<BRP_POS);
-	mcp25625_bit_modify(CNF2_ADDR, BLTMODE | PHSEG1 | PRSEG, BLTMODE | (PHSEG1_QUANTA-1)<<PHSEG1_POS | (PROPSEG_QUANTA-1)<<PRSEG);
+	mcp25625_bit_modify(CNF2_ADDR, BLTMODE | PHSEG1 | PRSEG, BLTMODE | (PHSEG1_QUANTA-1)<<PHSEG1_POS | (PROPSEG_QUANTA-1)<<PRSEG_POS);
 	mcp25625_bit_modify(CNF3_ADDR, PHSEG2, (PHSEG2_QUANTA-1) << PHSEG2_POS);
 	//Set reception filters and masks
 	mcp25625_id_t filter = generate_filter_mask_id(ID_FILTER,DATA_FILTER,CAN_STANDARD_FRAME);
@@ -90,7 +90,7 @@ void CAN_init()
 	//TODO: Change to NORMAL_OPERATION after testing, loopback mode for testing.
 	mcp25625_bit_modify(CANCTRL_ADDR, REQOP | CLKEN, LOOPBACK_MODE << REQOP_POS | 0 << CLKEN_POS);
 	//While until normal operation mode is set.
-	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != NORMAL_OPERATION);
+	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != LOOPBACK_MODE);
 }
 
 bool CAN_message_available()
