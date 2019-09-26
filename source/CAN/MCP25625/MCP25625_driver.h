@@ -519,7 +519,7 @@ typedef union
  */
 typedef enum
 {
-	PHSEG2		=	0x03,		///< @brief PS2 Length bits Mask
+	PHSEG2		=	0x07,		///< @brief PS2 Length bits Mask
 	PHSEG2_0	=	0x01,		///< @brief PS2 Length bit 0 Mask
 	PHSEG2_1	=	0x02,		///< @brief PS2 Length bit 1 Mask
 	PHSEG2_2	=	0x04,		///< @brief PS2 Length bit 2 Mask
@@ -575,7 +575,7 @@ typedef union
  */
 typedef enum
 {
-	PRSEG		=	0x03,		///< @brief Propagation Segment Length bits Mask
+	PRSEG		=	0x07,		///< @brief Propagation Segment Length bits Mask
 	PRSEG_0		=	0x01,		///< @brief Propagation Segment Length bit 0 Mask
 	PRSEG_1		=	0x02,		///< @brief Propagation Segment Length bit 1 Mask
 	PHSEG_2		=	0x04,		///< @brief Propagation Segment Length bit 2 Mask

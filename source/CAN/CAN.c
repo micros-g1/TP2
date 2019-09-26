@@ -85,10 +85,10 @@ void CAN_init()
 	//Configure interrupt pin
 	//TODO: Configure interrupt and callback
 	//Enable interrupts in MCP25625
-	mcp25625_write_register(CANINTE_ADDR, RX0IE | RX1IE);
-	//Set to normal mode, and disable clock, which is not needed.
-	//TODO: Change to NORMAL_OPERATION after testing
-	mcp25625_bit_modify(CANSTAT_ADDR, OPMOD | CLKEN, LOOPBACK_MODE << OPMOD_POS | 0 << CLKEN_POS);
+	mcp25625_write_register(CANINTE_ADDR, ERRIE | RX0IE | RX1IE);
+	//Set to normal operation, and disable clock, which is not needed.
+	//TODO: Change to NORMAL_OPERATION after testing, loopback mode for testing.
+	mcp25625_bit_modify(CANCTRL_ADDR, REQOP | CLKEN, LOOPBACK_MODE << REQOP_POS | 0 << CLKEN_POS);
 	//While until normal operation mode is set.
 	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != NORMAL_OPERATION);
 }
