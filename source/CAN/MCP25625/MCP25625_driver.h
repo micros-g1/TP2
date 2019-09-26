@@ -453,15 +453,15 @@ typedef union
 typedef enum
 {
 	CLKPRE		=	0x03,		///< @brief CLKOUT Pin Prescaler bits Mask
-	CLKPRE0		=	0x01,		///< @brief CLKOUT Pin Prescaler bit 0 Mask
-	CLKPRE1		=	0x02,		///< @brief CLKOUT Pin Prescaler bit 1 Mask
+	CLKPRE_0	=	0x01,		///< @brief CLKOUT Pin Prescaler bit 0 Mask
+	CLKPRE_1	=	0x02,		///< @brief CLKOUT Pin Prescaler bit 1 Mask
 	CLKEN		=	0x04,		///< @brief CLKOUT Pin Enable bit Mask
 	OSM			=	0x08,		///< @brief One-Shot Mode bit Mask
 	ABAT		=	0x10,		///< @brief Abort All Pending Transmissions bit Mask
 	REQOP		=	0xE0,		///< @brief Request Operation mode bits Mask
-	REQOP0		=	0x02,		///< @brief Request Operation mode bit 0 Mask
-	REQOP1		=	0x04,		///< @brief Request Operation mode bit 1 Mask
-	REQOP2		=	0x08		///< @brief Request Operation mode bit 2 Mask
+	REQOP_0		=	0x02,		///< @brief Request Operation mode bit 0 Mask
+	REQOP_1		=	0x04,		///< @brief Request Operation mode bit 1 Mask
+	REQOP_2		=	0x08		///< @brief Request Operation mode bit 2 Mask
 }mcp25625_canctrl_mask_t;
 
 /**
