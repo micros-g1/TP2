@@ -14,9 +14,9 @@
 // Then K = TBIT x FOSC / N
 // SYNC_T = 1xTQ
 
-#define PROPSEG_QUANTA 4
-#define PHSEG1_QUANTA 1
-#define PHSEG2_QUANTA 2
+#define PROPSEG_QUANTA 4u
+#define PHSEG1_QUANTA 1u
+#define PHSEG2_QUANTA 2u
 
 #define ID_MASK ~0x07	//3 lsb can take any value.
 #define ID_FILTER 0		//Combined with ID_MASK, all bits except the first 3 bits must be zero.
@@ -62,7 +62,7 @@ void CAN_init()
 	mcp25625_reset();
 	//Configure Timing (and set BLTMODE so that value of PHSEG2 is set by PHSEG2 bits in CNF3)
 	mcp25625_bit_modify(CNF1_ADDR, BRP, BRP_VALUE<<BRP_POS);
-	mcp25625_bit_modify(CNF2_ADDR, BLTMODE | PHSEG1 | PRSEG, BLTMODE | (PHSEG1_QUANTA-1)<<PHSEG1_POS | (PROPSEG_QUANTA-1)<<PRSEG);
+	mcp25625_bit_modify(CNF2_ADDR, BLTMODE | PHSEG1 | PRSEG, BLTMODE | (PHSEG1_QUANTA-1)<<PHSEG1_POS | (PROPSEG_QUANTA-1)<<PRSEG_POS);
 	mcp25625_bit_modify(CNF3_ADDR, PHSEG2, (PHSEG2_QUANTA-1) << PHSEG2_POS);
 	//Set reception filters and masks
 	mcp25625_id_t filter = generate_filter_mask_id(ID_FILTER,DATA_FILTER,CAN_STANDARD_FRAME);
@@ -90,7 +90,7 @@ void CAN_init()
 	//TODO: Change to NORMAL_OPERATION after testing, loopback mode for testing.
 	mcp25625_bit_modify(CANCTRL_ADDR, REQOP | CLKEN, LOOPBACK_MODE << REQOP_POS | 0 << CLKEN_POS);
 	//While until normal operation mode is set.
-	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != NORMAL_OPERATION);
+	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != LOOPBACK_MODE);
 }
 
 bool CAN_message_available()
@@ -206,7 +206,7 @@ static void convert_raw_to_can_message(const mcp25625_id_data_t *p_raw_package, 
 		p_can_message->message_id |= p_raw_package->id.eid8.eid_h;
 		p_can_message->message_id <<= 8;
 		p_can_message->message_id |= p_raw_package->id.eid0.eid_l;
-		p_can_message->fir.rtr = p_raw_package->data.dlc.rtr;
+		p_can_message->fir.rtr = p_raw_package->dlc.rtr;
 	}
 	else
 	{
@@ -216,10 +216,12 @@ static void convert_raw_to_can_message(const mcp25625_id_data_t *p_raw_package, 
 		p_can_message->message_id |= p_raw_package->id.sidl.sid_l;
 		p_can_message->fir.rtr = p_raw_package->id.sidl.ssr;
 	}
-	unsigned int n_msg = p_raw_package->data.dlc.dlc;
+	unsigned int n_msg = p_raw_package->dlc.dlc;
 	n_msg = n_msg <= 8? n_msg : 8;
-	for(int i = 0 ; i < n_msg ; i++)
-		p_can_message->data[i] = p_raw_package->data.buffer[i];
+	//RTR frames do not have data
+	if(!p_can_message->fir.rtr)
+		for(int i = 0 ; i < n_msg ; i++)
+			p_can_message->data[i] = p_raw_package->data.buffer[i];
 	p_can_message->fir.dlc = n_msg;
 }
 
@@ -239,13 +241,20 @@ void convert_can_message_to_raw(const can_message_t *p_can_message, mcp25625_id_
 			p_raw_package->id.sidh.sid_h = (uint8_t) ((p_can_message->message_id >> 19) & 0x0FF);
 			break;
 	}
+	//id.sidl.ssr is not valid for transmission
+	//But it is set here so that it is possible to convert messages to raw and back to can message
+	//or to can message and back to raw.
+	//Transmission will ignore this bit.
 	p_raw_package->id.sidl.ssr = p_can_message->fir.rtr;
-	p_raw_package->data.dlc.rtr = p_can_message->fir.rtr;
+	//This is the important one for transmission:
+	p_raw_package->dlc.rtr = p_can_message->fir.rtr;
 	unsigned int n_msg = p_can_message->fir.dlc;
 	n_msg = n_msg <= 8? n_msg : 8;
-	for(int i = 0 ; i < n_msg ; i++)
-		p_raw_package->data.buffer[i] = p_can_message->data[i];
-	p_raw_package->data.dlc.dlc = n_msg;
+	//RTR frames do not have data
+	if(!p_can_message->fir.rtr)
+		for(int i = 0 ; i < n_msg ; i++)
+			p_raw_package->data.buffer[i] = p_can_message->data[i];
+	p_raw_package->dlc.dlc = n_msg;
 }
 
 

@@ -216,6 +216,7 @@ void mcp25625_read_rx_buffer_id_data(mcp25625_rxb_id_t buffer_id, mcp25625_id_da
 			break;
 	}
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
+	//Can't know beforehand how many bytes we need. grab them all.
 	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_id_data));
 	memcpy(&temp_array[1], p_id_data, sizeof(*p_id_data));
 }
@@ -236,8 +237,13 @@ void mcp25625_load_tx_buffer_id_data(mcp25625_txb_id_t buffer_id, const mcp25625
 			break;
 	}
 	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
-	memcpy(&temp_array[1], p_id_data, sizeof(*p_id_data));
-	spi_transaction(&temp_array,NULL,1+sizeof(*p_id_data));
+	//No need to transfer all bytes. Read frame info
+	//and determine how many bytes are needed.
+	size_t bytes_to_transfer = p_id_data->dlc.rtr? 0 : p_id_data->dlc.dlc;
+	bytes_to_transfer >= 8? 8 : bytes_to_transfer;
+	bytes_to_transfer += sizeof(mcp25625_id_t);
+	memcpy(&temp_array[1], p_id_data, bytes_to_transfer);
+	spi_transaction(&temp_array,NULL,1+bytes_to_transfer);
 }
 
 void mcp25625_tx_request_to_send(mcp25625_txb_rts_flag_t tx_rts_flags)

@@ -453,15 +453,15 @@ typedef union
 typedef enum
 {
 	CLKPRE		=	0x03,		///< @brief CLKOUT Pin Prescaler bits Mask
-	CLKPRE0		=	0x01,		///< @brief CLKOUT Pin Prescaler bit 0 Mask
-	CLKPRE1		=	0x02,		///< @brief CLKOUT Pin Prescaler bit 1 Mask
+	CLKPRE_0	=	0x01,		///< @brief CLKOUT Pin Prescaler bit 0 Mask
+	CLKPRE_1	=	0x02,		///< @brief CLKOUT Pin Prescaler bit 1 Mask
 	CLKEN		=	0x04,		///< @brief CLKOUT Pin Enable bit Mask
 	OSM			=	0x08,		///< @brief One-Shot Mode bit Mask
 	ABAT		=	0x10,		///< @brief Abort All Pending Transmissions bit Mask
 	REQOP		=	0xE0,		///< @brief Request Operation mode bits Mask
-	REQOP0		=	0x02,		///< @brief Request Operation mode bit 0 Mask
-	REQOP1		=	0x04,		///< @brief Request Operation mode bit 1 Mask
-	REQOP2		=	0x08		///< @brief Request Operation mode bit 2 Mask
+	REQOP_0		=	0x02,		///< @brief Request Operation mode bit 0 Mask
+	REQOP_1		=	0x04,		///< @brief Request Operation mode bit 1 Mask
+	REQOP_2		=	0x08		///< @brief Request Operation mode bit 2 Mask
 }mcp25625_canctrl_mask_t;
 
 /**
@@ -1199,9 +1199,8 @@ typedef struct	//Using union for uniform code
  * @brief Data: Data Length Code Register with Data buffer
  * @details Contains data length and transfered / received data
  */
-typedef struct	//Using union for uniform code
+typedef struct	//Using struct for uniform code
 {
-	mcp25625_dlc_t dlc;			///< @brief DATA LENGTH CODE
 	uint8_t	buffer[8];			///< @brief Data Buffer
 }mcp25625_data_t __attribute__((__aligned__(1)));
 
@@ -1210,14 +1209,20 @@ typedef struct	//Using union for uniform code
  ******************************************************************************/
 /**
  * @struct mcp25625_id_data_t
- * @brief ID+Data:  SIDH/SIDL/EID8/EID0/DLC and Buffer.
+ * @brief ID+DLC+Data:  SIDH/SIDL/EID8/EID0/DLC and Buffer.
  * @details Represents the whole buffer (without configuration register)\n
- * Buffer Id + DLC + Buffer data.
+ * Buffer Id + DLC + Buffer data.\n
+ * It is important to note that Id+DLC info format is slightly different
+ * for Transfer buffer and receive buffer:\n
+ * *Transfer*: "Remote Transfer Request" is given by .dlc.rtr
+ * *Receive*: "Remote Transfer Request" is given by .id.ssr if .id.eid == true,
+ * else it is given by .dlc.rtr
  */
 typedef struct	//Using union for uniform code
 {
-	mcp25625_id_t id;			///< ID
-	mcp25625_data_t	data;		///< DLC + buffer
+	mcp25625_id_t id;			///< @brief ID
+	mcp25625_dlc_t dlc;			///< @brief DATA LENGTH CODE
+	mcp25625_data_t	data;		///< @brief DLC + buffer
 }mcp25625_id_data_t __attribute__((__aligned__(1)));
 
 /*******************************************************************************
@@ -1352,6 +1357,7 @@ void mcp25625_read_rx_buffer_id_data(mcp25625_rxb_id_t buffer_id, mcp25625_id_da
 
 /**
  * @brief Load RX Buffer id+data.
+ * @details Id data will be used to determine how many bytes should be transfered.
  * @param buffer_id Id of RX Buffer to use.
  * @param p_id_data pointer to id+data struct where to write read data.
  */
