@@ -32,7 +32,7 @@ typedef struct
 {
 	uint8_t	dlc;				///< @brief CAN Data Length Code
 								///< @details Should be <= 8. Can be larger, but 8 will be used\n
-	bool rtr;					///< @brief Remote transmission request
+	bool rtr;					///< @brief Remote transmission request.
 	can_frame_t frame_type;		///< @brief CAN Frame type
 }can_fir_t;
 
@@ -45,7 +45,7 @@ typedef struct
 {
 	can_fir_t fir;				///< @brief CAN Frame Register
 	uint8_t message_id;			///< @brief CAN Message id
-	uint8_t data[8];			///< @brief data
+	uint8_t data[8];			///< @brief data. data length: fir.dlc . Not used if fir.rtr .
 }can_message_t;
 
 typedef void (*CAN_message_callback_t) (const can_message_t*);	///< @brief CAN Message Callback definition

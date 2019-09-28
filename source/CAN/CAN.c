@@ -206,7 +206,7 @@ static void convert_raw_to_can_message(const mcp25625_id_data_t *p_raw_package, 
 		p_can_message->message_id |= p_raw_package->id.eid8.eid_h;
 		p_can_message->message_id <<= 8;
 		p_can_message->message_id |= p_raw_package->id.eid0.eid_l;
-		p_can_message->fir.rtr = p_raw_package->data.dlc.rtr;
+		p_can_message->fir.rtr = p_raw_package->dlc.rtr;
 	}
 	else
 	{
@@ -216,10 +216,12 @@ static void convert_raw_to_can_message(const mcp25625_id_data_t *p_raw_package, 
 		p_can_message->message_id |= p_raw_package->id.sidl.sid_l;
 		p_can_message->fir.rtr = p_raw_package->id.sidl.ssr;
 	}
-	unsigned int n_msg = p_raw_package->data.dlc.dlc;
+	unsigned int n_msg = p_raw_package->dlc.dlc;
 	n_msg = n_msg <= 8? n_msg : 8;
-	for(int i = 0 ; i < n_msg ; i++)
-		p_can_message->data[i] = p_raw_package->data.buffer[i];
+	//RTR frames do not have data
+	if(!p_can_message->fir.rtr)
+		for(int i = 0 ; i < n_msg ; i++)
+			p_can_message->data[i] = p_raw_package->data.buffer[i];
 	p_can_message->fir.dlc = n_msg;
 }
 
@@ -239,13 +241,20 @@ void convert_can_message_to_raw(const can_message_t *p_can_message, mcp25625_id_
 			p_raw_package->id.sidh.sid_h = (uint8_t) ((p_can_message->message_id >> 19) & 0x0FF);
 			break;
 	}
+	//id.sidl.ssr is not valid for transmission
+	//But it is set here so that it is possible to convert messages to raw and back to can message
+	//or to can message and back to raw.
+	//Transmission will ignore this bit.
 	p_raw_package->id.sidl.ssr = p_can_message->fir.rtr;
-	p_raw_package->data.dlc.rtr = p_can_message->fir.rtr;
+	//This is the important one for transmission:
+	p_raw_package->dlc.rtr = p_can_message->fir.rtr;
 	unsigned int n_msg = p_can_message->fir.dlc;
 	n_msg = n_msg <= 8? n_msg : 8;
-	for(int i = 0 ; i < n_msg ; i++)
-		p_raw_package->data.buffer[i] = p_can_message->data[i];
-	p_raw_package->data.dlc.dlc = n_msg;
+	//RTR frames do not have data
+	if(!p_can_message->fir.rtr)
+		for(int i = 0 ; i < n_msg ; i++)
+			p_raw_package->data.buffer[i] = p_can_message->data[i];
+	p_raw_package->dlc.dlc = n_msg;
 }
 
 
