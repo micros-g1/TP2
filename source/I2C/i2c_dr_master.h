@@ -1,7 +1,7 @@
 /**
- * @file i2c_master_dr.h
+ * @file i2c_dr_master.h
  * @author Grupo 1 Labo de Micros
- * @date 24 Sep 2019
+ * @date 28 Sep 2019
  * @brief I2C Master Driver
  * @details
  * I2C Driver
@@ -11,8 +11,8 @@
  * Although not all multimaster cases are handled, some of them may be implemented for future upgrades/implementations.
  */
 
-#ifndef I2C_I2C_MASTER_DR_H_
-#define I2C_I2C_MASTER_DR_H_
+#ifndef I2C_I2C_DR_MASTER_H_
+#define I2C_I2C_DR_MASTER_H_
 #include <stdbool.h>
 
 /**
@@ -30,9 +30,34 @@ typedef void (*i2c_service_callback_t)(void);
  * Check the MK64 user manual (Table 51-5) for information on what hardware interrupts would be called
  * and the status, flag and enable they signify.
  * Uses the I2c0 module.
+ * Calling the init function twice has no effect (safe init).
  * @param callback : callback to be called when a hardware interrupt is called.
  */
 void i2c_dr_master_init(i2c_service_callback_t callback);
+/**
+ * @brief I2C Driver get Tx or Rx mode.
+ * @details Get the current data transfer mode for the master :
+ * Tx: Transferring data mode.
+ * Rx: Reading data mode.
+ * @return *true* for tx mode, *false* for rx mode.
+ */
+bool i2c_dr_get_tx_rx_mode();
+
+/**
+ * @brief I2C Driver set Tx or Rx mode.
+ * @details Sets the current data transfer mode for the master :
+ * Tx: Transferring data mode.
+ * Rx: Reading data mode.
+ * @param tx_mode : *true* for tx mode, *false* for rx mode.
+ */
+void i2c_dr_set_tx_rx_mode(bool tx_mode);
+/**
+ * @brief I2C Driver send Start or Stop signal.
+ * @details send start or stop signal.
+ * @param start_stop : *true* for start signal, *false* for stop signal.
+ */
+void i2c_dr_send_start_stop(bool start_stop);
+
 /**
  * @brief I2C Get Data Transfer Complete
  * @details Gets the current status of the last data transfer.
@@ -104,5 +129,4 @@ bool i2c_dr_get_startf();
  */
 void i2c_dr_clear_startf();
 
-
-#endif /* I2C_I2C_MASTER_DR_H_ */
+#endif /* I2C_I2C_DR_MASTER_H_ */

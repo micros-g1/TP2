@@ -5,7 +5,7 @@
  *      Author: Tomas
  */
 
-#include <I2C/i2c_master_dr.h>
+#include <I2C/i2c_dr_master.h>
 #include "MK64F12.h"
 #include "stdlib.h"
 
@@ -14,16 +14,55 @@
 i2c_service_callback_t interruption_callback = NULL;
 
 void i2c_dr_master_init(i2c_service_callback_t callback){
+	static bool initialized = false;
+	if(initialized) return;
+
 	SIM->SCGC4 |= SIM_SCGC4_I2C0(1);		//clock gating, feed clock to the module
 	I2C_Type* i2c0_pos = (I2C_Type*) I2C0_BASE;
 	//clock module is set to 50Mhz!!
 	i2c0_pos->F = 0x2D;		//set baud rate to 78125Hz. mult == 0x0-> mult=1; scl div ==2D-> scl div=640; !!!
 	i2c0_pos->C1 = 0xF8;	//IICEN = 1; IICIE = 1; MST = 1; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
+	(i2c0_pos->SMB) &= ~(1UL << 6);		//ALERTEN = 0
+	(i2c0_pos->SMB) &= ~(1UL << 7);		//FACK = 0, SHOULD BE CONTEMPLATED IN i2c_dt_master IF NOT!!
+	(i2c0_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 	interruption_callback = callback;
 }
 
 void I2C0_IRQHandler(){
 	interruption_callback();
+}
+/**************************************
+****************I2Cx_C1 field***********
+***************************************
+*7		6		5	4	3		2	1		0
+*IICEN, IICIE, MST, TX, TXAK, RSTA, WUEN, DMAEN
+*/
+/*
+ * Master Mode Select
+ * When MST is changed from 0 to 1, a START signal is generated on the bus and master mode is selected.
+ * When this bit changes from 1 to 0, a STOP signal is generated and the mode of operation changes from
+ * master to slave.
+ * 0 Slave mode
+ * 1 Master mode
+ */
+void set_master_mode(){
+
+}
+bool i2c_dr_get_tx_rx_mode(){
+	return ((((I2C_Type*) I2C0_BASE)->C1) >> 4) & 1U;
+}
+
+void i2c_dr_set_tx_rx_mode(bool tx_mode){
+	unsigned char word = ((I2C_Type*) I2C0_BASE)->C1;
+	(((I2C_Type*) I2C0_BASE)->C1) ^= (-(unsigned char)tx_mode ^ word) & (1U << 4);
+}
+
+void i2c_dr_send_start_stop(bool start_stop){
+	 /* The internal register change from:
+	 * Master to slave when sending a stop signal.
+	 * Slave to Master when sending a start signal. */
+	unsigned char word = ((I2C_Type*) I2C0_BASE)->C1;
+	(((I2C_Type*) I2C0_BASE)->C1) ^= (-(unsigned char)word ^ start_stop) & (1U << 5);
 }
 
 /**************************************
@@ -60,7 +99,7 @@ void i2c_dr_clear_iicif(){
 	 * This bit sets when an interrupt is pending. This bit must be cleared by software by writing 1 to it, such as in
 	 * the interrupt routine.
 	*/
-	((I2C_Type*) I2C0_BASE)->S &= ~(1UL << 1);
+	(((I2C_Type*) I2C0_BASE)->S) |= 1UL << 1;
 }
 bool i2c_dr_get_iicif(){
 	/* IICIF -- see i2c_dr_clear_iicif also for more information
