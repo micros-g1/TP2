@@ -26,6 +26,7 @@ void i2c_master_interface_init(){
 	if(initialized) return;
 	i2c_dr_master_init(hardware_interrupt_routine);
 	i2c_master_interface_reset();
+	initialized = true;
 }
 
 void i2c_master_interface_reset(){

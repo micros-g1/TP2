@@ -26,6 +26,7 @@ void i2c_dr_master_init(i2c_service_callback_t callback){
 	(i2c0_pos->SMB) &= ~(1UL << 7);		//FACK = 0, SHOULD BE CONTEMPLATED IN i2c_dt_master IF NOT!!
 	(i2c0_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 	interruption_callback = callback;
+	initialized = true;
 }
 
 void I2C0_IRQHandler(){
