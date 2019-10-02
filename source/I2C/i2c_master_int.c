@@ -53,6 +53,7 @@ static void i2c_master_int_reset(i2c_module_int_t* mod){
 	mod->to_be_read_lenght = 0;
 	mod->read_bytes = 0;
 	mod->about_to_read = false;
+	q_init(&(mod->buffer));
 }
 
 static void hardware_interrupt_routine(i2c_module_int_t* mod){
@@ -123,10 +124,15 @@ void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data
 		read_data[i] = q_popfront(&(mod->buffer));
 }
 
-void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char write_data, int amount_of_bytes){
+void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data, int amount_of_bytes){
 	mod->last_byte_transmitted = false;
 }
 
 static bool end_of_address_cycle(i2c_module_int_t* mod){
 	return false;
+}
+
+
+void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add){
+	mod->slave_address = slave_add;
 }

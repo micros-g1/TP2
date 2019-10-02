@@ -33,4 +33,6 @@ void accel_init();
  */
 accel_raw_data_t accel_get_last_data();
 
+
+
 #endif /* ACCELEROMETER_ACCELEROMETER_H_ */

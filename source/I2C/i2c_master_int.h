@@ -33,6 +33,7 @@ typedef enum {I2C0_INT_MOD, I2C1_INT_MOD, I2C2_INT_MOD, AMOUNT_I2C_INT_MOD} i2c_
  */
 typedef struct{
 	i2c_module_id_int_t id;
+
 	int starf_log_count;
 	bool last_byte_transmitted;
 	bool last_byte_read;
@@ -41,6 +42,7 @@ typedef struct{
 
 	//bytes that will be written in the current write request
 	unsigned char to_be_written[MAX_WRITE_CHARS];
+	unsigned char slave_address;
 	//amount of bytes to be written in the current write request
 	int to_be_written_lengths;
 	int written_bytes;
@@ -49,6 +51,8 @@ typedef struct{
 	int about_to_read;
 	int to_be_read_lengths;
 	bool read_bytes;
+
+
 } i2c_module_int_t;
 
 
@@ -108,5 +112,8 @@ void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data
  * @param write_data : data that will be sent to the slave.
  * @param amount_of_bytes : amount of bytes that will be sent to the slave.
  */
-void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char write_data, int amount_of_bytes);
+void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data, int amount_of_bytes);
+
+void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add);
+
 #endif /* I2C_I2C_MASTER_INT_H_ */
