@@ -24,34 +24,13 @@ typedef struct {
  * Has no effect when called twice with the same module (safe init).
  */
 void accel_init();
-
 /**
- * @brief Accelerometer, ask for data
- * @details Accelerometer, ask for data.
- * Loads new data into the accel buffer when this data is received.
- * see also accel_has_new_data() for asking for the data that was loaded to the buffer.
- * @param aked_data : data to be read.
- */
-void accel_ask_for_data(accel_data_coords_t aked_data);
-/**
- * @brief Accelerometer, ask for data
- * @details Accelerometer, ask if buffer has new data
- * ask if the buffer has new data to be read.
- * Should call accel_has_new_data before a call to this function.
- * See also accel_ask_for_data()
- * @param aked_data : data to be read.
- * @return *true* when the buffer has new data to be read, *false* otherwise.
- */
-bool accel_has_new_data(accel_data_coords_t aked_data);
-
-/**
- * @brief Accelerometer, ask for data
- * @details Accelerometer, get data from buffer.
+ * @brief I2C Master, get new data
+ * @details I2C Master, get data from buffer.
  * Should know that there is new data to be read before calling this function!!!
- * ( See also accel_ask_for_data() )
- * @param aked_data : data to be read.
+ * ( See also i2c_master_int_has_new_data() )
  * @return new data from buffer.
  */
-unsigned char accel_get_new_data(accel_data_coords_t aked_data);
+accel_raw_data_t accel_get_last_data();
 
 #endif /* ACCELEROMETER_ACCELEROMETER_H_ */

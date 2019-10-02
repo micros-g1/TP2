@@ -138,4 +138,17 @@ bool i2c_dr_get_startf(i2c_modules_dr_t mod);
  */
 void i2c_dr_clear_startf(i2c_modules_dr_t mod);
 
+/**
+ * @brief I2C Get the current status of the stop interrupt flag
+ * @details I2C Gets the current status of the stop interrupt flag.
+ * @return *true* if the flag is set, *false* otherwise.
+ */
+bool i2c_dr_get_stopf(i2c_modules_dr_t mod);
+/**
+ * @brief I2C clear stop interrupt flag
+ * @details Clears the stopf interrupt flag, see also i2c_dr_get_stopf() .
+ */
+void i2c_dr_clear_stopf(i2c_modules_dr_t mod);
+
+
 #endif /* I2C_I2C_DR_MASTER_H_ */

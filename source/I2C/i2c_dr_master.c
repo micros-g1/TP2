@@ -200,3 +200,11 @@ void i2c_dr_clear_startf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 4;
 }
 
+bool i2c_dr_get_stopf(i2c_modules_dr_t mod){
+	return ((i2c_dr_modules[mod]->FLT) >> 6) & 1U;
+}
+
+
+void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
+	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
+}

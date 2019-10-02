@@ -6,7 +6,7 @@
 #include "hardware.h"
 
 // queue Variables
-static volatile uint8_t queue[Q_MAX_LENGTH];	//Circular queue
+///static volatile uint8_t queue[Q_MAX_LENGTH];	//Circular queue
 static volatile unsigned int queue_length = 0;				//Keeps track of queue length
 static volatile unsigned int in_offset = 0;					//Offset for adding next data
 static volatile unsigned int out_offset = 0;				//Offset for reading next data

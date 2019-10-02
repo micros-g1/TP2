@@ -27,7 +27,6 @@ typedef struct {
 } queue_t;
 
 
-
 void q_init(queue_t * q);
 
 //Wait for data. Can only be used by main loop.
