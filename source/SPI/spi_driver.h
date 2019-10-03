@@ -26,15 +26,6 @@ typedef enum{
 }spi_transfer_order_t;
 
 typedef struct{
-	bool cont_pcs;
-	uint8_t ctar_n;
-	bool eoq;
-	bool cont_clear;
-	uint8_t pcs_assert;
-	uint8_t data;
-}spi_push_data_t;
-
-typedef struct{
 	uint8_t * tx_data;
 	uint8_t * rx_data;
 	uint16_t frames_to_transfer;
@@ -47,10 +38,7 @@ typedef struct{
  * set of configurations
  */
 void spi_init(s);
-void spi_push_frame(spi_push_data_t push_data);
-
-void spi_master_transfer_blocking(spi_transfer_data_t * transfer_data);
-
+void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t length);
 // CTAR CONFIG
 void spi_set_double_baud_rate(bool double_br);
 void spi_set_frame_size(uint8_t size);

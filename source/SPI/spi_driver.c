@@ -21,6 +21,15 @@ typedef struct{
 	int alt;
 }spi_pin_t;
 
+typedef struct{
+	bool cont_pcs;
+	uint8_t ctar_n;
+	bool eoq;
+	bool cont_clear;
+	uint8_t pcs_assert;
+	uint8_t data;
+}spi_push_data_t;
+
 void spi_driver_mcr_init(void);
 void spi_driver_port_init(void);
 void spi_driver_setup_port(PORT_Type * port_ptr, spi_pin_t pin_info);
@@ -28,6 +37,7 @@ void spi_driver_halt_module(bool value);
 void spi_driver_ctar_init(void);
 void spi_driver_push_txdata(uint8_t * data_in, int length);
 bool spi_driver_is_running(void);
+void spi_push_frame(spi_push_data_t push_data);
 
 
 void spi_driver_init(void){
@@ -330,7 +340,7 @@ void spi_push_frame(spi_push_data_t push_data){
 	}
 }
 
-void spi_master_transfer_blocking(spi_transfer_data_t * transfer_data){
+void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t length){
 	uint32_t rx_index = 0;
 	uint32_t tx_index = 0;
 	bool push_finished = false; // true if all elements receibed in tx fifo
@@ -342,16 +352,16 @@ void spi_master_transfer_blocking(spi_transfer_data_t * transfer_data){
 	spi_push_data_t push_data;
 
 	// if out not requested, consider pop finished
-	if(transfer_data->rx_data == NULL)
+	if(rx_data == NULL)
 		pop_finished = true;
 
 	// while something to do...
 	while(!push_finished || !pop_finished){
 		// if pop finished and there is data to grab
 		if(!pop_finished && (SPI0->SR & SPI_SR_RXCTR_MASK))
-			transfer_data->rx_data[rx_index++] = (uint16_t)(SPI0->POPR & SPI_POPR_RXDATA_MASK);
+			rx_data[rx_index++] = (uint16_t)(SPI0->POPR & SPI_POPR_RXDATA_MASK);
 			// if finished (i received all bytes)
-		if(rx_index == transfer_data->frames_to_transfer)
+		if(rx_index == length)
 			pop_finished = true;
 
 		// if push not finished, and out fifo not full,
@@ -366,9 +376,9 @@ void spi_master_transfer_blocking(spi_transfer_data_t * transfer_data){
 		if(!push_finished && ! tx_fifo_full && (pop_finished || (frames_in_tx_fifo + 1 < free_rx_fifo_frames))){
 			//push & transmit.
 
-			push_data.eoq = (transfer_data->frames_to_transfer == tx_index + 1);
-			push_data.data = transfer_data->tx_data[tx_index++];
-			push_data.cont_pcs = (tx_index < transfer_data->frames_to_transfer);
+			push_data.eoq = (length == tx_index + 1);
+			push_data.data = tx_data[tx_index++];
+			push_data.cont_pcs = (tx_index < length);
 			push_data.cont_clear = (tx_index == 0);
 			spi_push_frame(push_data);
 
@@ -379,14 +389,14 @@ void spi_master_transfer_blocking(spi_transfer_data_t * transfer_data){
 			SPI0->SR |= SPI_SR_TFFF_MASK;
 
 			// if all tx data ha been pushed, then push_completed
-			if(tx_index == transfer_data->frames_to_transfer)
+			if(tx_index == length)
 				push_finished = true;
 		}
 	}
-	transfer_data->frames_completed = (uint16_t)((SPI0->TCR & SPI_TCR_SPI_TCNT_MASK) >> SPI_TCR_SPI_TCNT_SHIFT);
 }
 
 //Esta funcion hay que hacerla prolija. O rehacerla
+// TODO: OBSOLETA BORRAR.
 void spi_driver_push_txdata(uint8_t * data_in, int length){
 
 	uint8_t in[256];
