@@ -32,7 +32,7 @@ typedef struct{
 
 void spi_driver_mcr_init(void);
 void spi_driver_port_init(void);
-void spi_driver_setup_port(PORT_Type * port_ptr, spi_pin_t pin_info);
+void spi_driver_setup_port(spi_pin_t pin_info);
 void spi_driver_halt_module(bool value);
 void spi_driver_ctar_init(void);
 void spi_driver_push_txdata(uint8_t * data_in, int length);
@@ -107,15 +107,10 @@ void spi_driver_port_init(void){
     spi_pin_t sin	= {.port=PD_SPI, .pin=3, .alt=2};
     spi_pin_t sout	= {.port=PD_SPI, .pin=2, .alt=2};
 
-    PORT_Type * pcs0_port;
-    PORT_Type * sck_port;
-    PORT_Type * sin_port;
-    PORT_Type * sout_port;
-
-    spi_driver_setup_port(pcs0_port, pcs0);
-    spi_driver_setup_port(sck_port, sck);
-    spi_driver_setup_port(sin_port, sin);
-    spi_driver_setup_port(sout_port, sout);
+    spi_driver_setup_port(pcs0);
+    spi_driver_setup_port(sck);
+    spi_driver_setup_port(sin);
+    spi_driver_setup_port(sout);
 
 }
 
@@ -125,8 +120,8 @@ void spi_driver_port_init(void){
  * @param port_ptr Pointer to the PORT_Type structure.
  * @param pin_info Structure containing the pin info.
  */
-void spi_driver_setup_port(PORT_Type * port_ptr, spi_pin_t pin_info){
-
+void spi_driver_setup_port(spi_pin_t pin_info){
+	PORT_Type * port_ptr;
 	switch(pin_info.port){
 	case PA_SPI:
 		port_ptr = PORTA;
@@ -144,17 +139,19 @@ void spi_driver_setup_port(PORT_Type * port_ptr, spi_pin_t pin_info){
 		port_ptr = PORTE;
 		break;
 	default:
-		//TODO: lanzar excepcion??
+		port_ptr = NULL;
 		break;
 	}
+	if(port_ptr != NULL)
+	{
+		//Clear and set MUX field
+		port_ptr->PCR[pin_info.pin] &= ~PORT_PCR_MUX_MASK;
+		port_ptr->PCR[pin_info.pin] |= PORT_PCR_MUX(pin_info.alt);
 
-	//Clear and set MUX field
-	port_ptr->PCR[pin_info.pin] &= ~PORT_PCR_MUX_MASK;
-	port_ptr->PCR[pin_info.pin] |= PORT_PCR_MUX(pin_info.alt);
-
-	//Lock PIN.
-	port_ptr->PCR[pin_info.pin] |= PORT_PCR_LK(1);
-	//TODO: Veriicar que la configuracion de Lock sea compatible.
+		//Lock PIN.
+		port_ptr->PCR[pin_info.pin] |= PORT_PCR_LK(1);
+		//TODO: Veriicar que la configuracion de Lock sea compatible.
+	}
 
 }
 
@@ -188,7 +185,7 @@ void spi_driver_ctar_init(void){
 }
 
 bool spi_driver_transfer_completed(void){
-	return SPI0->SR & SPI_SR_TCF_MASK != 0;
+	return (SPI0->SR & SPI_SR_TCF_MASK) != 0;
 }
 
 bool spi_driver_is_running(void){
@@ -372,7 +369,7 @@ void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t l
 		uint8_t frames_in_rx_fifo = (uint8_t)((SPI0->SR & SPI_SR_RXCTR_MASK) >> SPI_SR_RXCTR_SHIFT);
 		uint8_t free_rx_fifo_frames = N_RXFIFO - frames_in_rx_fifo;
 		uint8_t frames_in_tx_fifo = (uint8_t)((SPI0->SR & SPI_SR_TXCTR_MASK) >> SPI_SR_TXCTR_SHIFT);
-		bool tx_fifo_full = SPI0->SR & SPI_SR_TFFF_MASK == 0;
+		bool tx_fifo_full = (SPI0->SR & SPI_SR_TFFF_MASK) == 0;
 		if(!push_finished && ! tx_fifo_full && (pop_finished || (frames_in_tx_fifo + 1 < free_rx_fifo_frames))){
 			//push & transmit.
 
@@ -394,39 +391,3 @@ void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t l
 		}
 	}
 }
-
-//Esta funcion hay que hacerla prolija. O rehacerla
-// TODO: OBSOLETA BORRAR.
-void spi_driver_push_txdata(uint8_t * data_in, int length){
-
-	uint8_t in[256];
-	static int j = 0, k=0;
-	if(length != 0){
-		//Wait until current transaction finishes.
-		while(spi_driver_is_running());
-		spi_driver_halt_module(false);
-
-		//clear EOQF.
-		SPI0->SR |= SPI_SR_EOQF(1);
-
-		uint32_t word = 0;
-		word |= SPI_PUSHR_CONT_MASK;
-		word |= SPI_PUSHR_PCS(1);
-		for(int i = 0; i<length;i++){
-			while(!(SPI0->SR & SPI_SR_TFFF_MASK)){
-				j++;
-			}
-			if(i == length-1){
-				word |= SPI_PUSHR_EOQ(1);
-				word &= ~SPI_PUSHR_CONT(1);
-			}
-			word &= ~SPI_PUSHR_TXDATA_MASK;
-			word |= data_in[i];
-			SPI0->PUSHR = word;
-			SPI0->SR |= SPI_SR_TFFF_MASK;
-			k++;
-		}
-	}
-	j--;
-}
-

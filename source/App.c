@@ -30,28 +30,16 @@ static void delayLoop(uint32_t veces);
 int i;
 void App_Init (void)
 {
-	spi_driver_init();
-	i=0;
 	//DO INIT
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	uint8_t in_data[] = {0xA,0xB,0xC,0xD,0xE,0xF};
-	uint8_t received_data[256];
-	spi_transfer_data_t tf_data;
-	tf_data.frames_to_transfer = 6;
-	tf_data.tx_data = in_data;
-	tf_data.rx_data = received_data;
-
-	spi_master_transfer_blocking(&tf_data);
-    delayLoop(160000UL);
 	//DO LOOP
 }
 static void delayLoop(uint32_t veces)
 {
-    while (veces--);
 }
 
 
