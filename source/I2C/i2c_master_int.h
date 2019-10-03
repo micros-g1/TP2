@@ -35,26 +35,32 @@ typedef struct{
 	i2c_module_id_int_t id;
 
 	int starf_log_count;
+
+	//tx mode
 	bool last_byte_transmitted;
+	unsigned char to_be_written[MAX_WRITE_CHARS];
+	unsigned char slave_address;		//bytes that will be written in the current write request
+
+	int to_be_written_length;			//amount of bytes to be written in the current write request
+	int written_bytes;
+
+	//rx mode
 	bool last_byte_read;
 	bool second_2_last_byte_2_be_read;
 	queue_t buffer;
 
-	//bytes that will be written in the current write request
-	unsigned char to_be_written[MAX_WRITE_CHARS];
-	unsigned char slave_address;
-	//amount of bytes to be written in the current write request
-	int to_be_written_lengths;
-	int written_bytes;
-	int to_be_read_lenght;
-
-	int about_to_read;
-	int to_be_read_lengths;
-	bool read_bytes;
-
+	int to_be_read_length;
 
 } i2c_module_int_t;
 
+
+typedef struct{
+
+}i2c_reading_request_int_t;
+
+typedef struct{
+
+} i2c_writing_request_int_t;
 
 /**
  * @brief I2C MASTER INIT

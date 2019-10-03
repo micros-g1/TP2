@@ -72,9 +72,7 @@ void I2C2_IRQHandler(){
  * 0 Slave mode
  * 1 Master mode
  */
-void set_master_mode(){
 
-}
 bool i2c_dr_get_tx_rx_mode(i2c_modules_dr_t mod){
 	return ((i2c_dr_modules[mod]->C1) >> 4) & 1U;
 }

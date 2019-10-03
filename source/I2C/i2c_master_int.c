@@ -10,6 +10,7 @@
 #include <I2C/i2c_dr_master.h>
 #include <I2C/i2c_master_int.h>
 #include "util/queue.h"
+#include <stdlib.h>
 /*-------------------------------------------
  ----------------DEFINES---------------------
  -------------------------------------------*/
@@ -27,7 +28,11 @@ static void i2c_master_int_reset(i2c_module_int_t* mod);
 static void handle_master_mode();
 static void handle_tx_mode();
 static void handle_rx_mode();
-static bool end_of_address_cycle(i2c_module_int_t* mod);
+
+static void read_byte(i2c_module_int_t* mod);
+static void write_byte(i2c_module_int_t* mod);
+
+
 
 /*-------------------------------------------
  ----------FUNCTION_IMPLEMENTATION-----------
@@ -48,11 +53,10 @@ static void i2c_master_int_reset(i2c_module_int_t* mod){
 	mod->last_byte_transmitted = false;
 	mod->last_byte_read = false;
 	mod->second_2_last_byte_2_be_read = false;
-	mod->to_be_written_lengths = 0;
+	mod->to_be_written_length = 0;
 	mod->written_bytes = 0;
-	mod->to_be_read_lenght = 0;
-	mod->read_bytes = 0;
-	mod->about_to_read = false;
+	mod->to_be_read_length = 0;
+
 	q_init(&(mod->buffer));
 }
 
@@ -83,21 +87,20 @@ static void handle_tx_mode(i2c_module_int_t* mod){
 
 	if(mod->last_byte_transmitted || i2c_dr_get_rxak(mod->id))
 		i2c_dr_send_start_stop(mod->id, false);
-	else if(end_of_address_cycle(mod)){
+	else if(mod->last_byte_transmitted && (mod->to_be_read_length > 0) ){
 		i2c_dr_set_tx_rx_mode(mod->id, false);
-		q_pushback( &(mod->buffer), i2c_dr_read_data(mod->id) );
+		read_byte(mod);
 	}
-	else{
-		i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);
-		if( (++mod->written_bytes) < mod->to_be_written_lengths )
-			mod->last_byte_transmitted = true;
-	}
+	else
+		write_byte(mod);
+
 }
 static void handle_rx_mode(i2c_module_int_t* mod){
+	read_byte(mod);
 	if(mod->last_byte_read)
 		i2c_dr_send_start_stop(mod->id, false);
 	/*ignoring the second to last by to be read condition because i m only reading from the magnetometer!!!*/
-	q_pushback(&(mod->buffer), i2c_dr_read_data(mod->id));
+
 }
 
 bool i2c_master_int_has_new_data(i2c_module_int_t* mod){
@@ -106,14 +109,20 @@ bool i2c_master_int_has_new_data(i2c_module_int_t* mod){
 
 void i2c_master_int_read_data(i2c_module_int_t* mod, unsigned char* question, int len_question, int amount_of_bytes){
 
-	if(len_question > 0){
-		mod->about_to_read = true;
+	if( len_question > 0 ){
+		i2c_master_int_write_data(mod, question, len_question);
+		mod->to_be_written[mod->to_be_written_length] = (mod->slave_address << 1) | 1u;
+		(mod->to_be_written_length)++;
 	}
-	else{
-		mod->about_to_read = false;
-	}
+	else
+		i2c_master_int_write_data(mod, NULL, 0);
+
+	mod->to_be_read_length = amount_of_bytes;
+	mod->last_byte_read = false;
+	mod->second_2_last_byte_2_be_read = (mod->to_be_read_length > 1);
 
 }
+
 int i2c_master_int_get_new_data_length(i2c_module_int_t* mod){
 	return q_length(&(mod->buffer));
 }
@@ -125,14 +134,33 @@ void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data
 }
 
 void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data, int amount_of_bytes){
-	mod->last_byte_transmitted = false;
-}
 
-static bool end_of_address_cycle(i2c_module_int_t* mod){
-	return false;
+	mod->to_be_written[0] = (mod->slave_address << 1) | 1u;
+	for(int i = 0; i < amount_of_bytes; i++)
+		mod->to_be_written[i+1] = write_data[i];
+
+	mod->to_be_written_length =  amount_of_bytes + 1;
+	mod->last_byte_transmitted = false;
+	mod->written_bytes = 0;
+	i2c_dr_set_tx_rx_mode(mod->id, true);
+
 }
 
 
 void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add){
 	mod->slave_address = slave_add;
+}
+
+static void read_byte(i2c_module_int_t* mod){
+
+	q_pushback(&(mod->buffer), i2c_dr_read_data(mod->id));
+
+	mod->last_byte_read = (--(mod->to_be_read_length));
+	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
+}
+
+static void write_byte(i2c_module_int_t* mod){
+	i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);
+
+	mod->last_byte_transmitted = ( (++mod->written_bytes) >= mod->to_be_written_length );
 }
