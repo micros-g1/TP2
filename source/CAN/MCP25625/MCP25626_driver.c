@@ -6,15 +6,7 @@
  */
 #include <CAN/MCP25625/MCP25625_driver.h>
 #include <string.h>
-//#include<SPI/SPI.h>
-
-//TODO: Remove temp code.
-//This function represents an spi function to be implemented in the future
-#define DEBUG_LENGTH 1024
-static int i_deb = 0;
-static uint8_t a_deb[DEBUG_LENGTH];
-void spi_transaction(void *p_in, void *p_out, size_t length)
-{if (i_deb+length+1>DEBUG_LENGTH) while(1); a_deb[i_deb++] = length ; memcpy(a_deb+i_deb,p_in,length) ; i_deb+= length;}
+#include<SPI/spi_driver.h>
 
 #define TEMP_ARRAY_BUFFER_LENGTH 128+2	//All memory + 1 read / write instruction + address worst case.
 //Array used for spi transactions.
@@ -81,11 +73,18 @@ typedef enum
 	TXB2_DATA = 5
 }mcp25625_tx_load_locations_t;
 
+void mcp25625_driver_init()
+{
+	spi_driver_init();
+	spi_set_clock_polarity(SPI_SCK_INACTIVE_LOW);
+	spi_set_clock_phase(SPI_CPHA_CAP_IN_LEAD_CHANGE_FOLLOWING);
+	spi_set_transfer_order(SPI_MSB_FIRST);
+}
 
 void mcp25625_reset(void)
 {
 	uint8_t instruction = MCP_RESET;
-	spi_transaction(&instruction, NULL, 1);
+	spi_master_transfer_blocking((uint8_t*)&instruction, NULL, 1);
 }
 
 void mcp25625_write(mcp25625_addr_t addr, size_t length, const uint8_t *p_data)
@@ -95,7 +94,7 @@ void mcp25625_write(mcp25625_addr_t addr, size_t length, const uint8_t *p_data)
 	temp_array[0] = MCP_WRITE;
 	temp_array[1] = addr;
 	memcpy(&temp_array[2], p_data, length);
-	spi_transaction(&temp_array,NULL,2+length);
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,2+length);
 }
 
 void mcp25625_read(mcp25625_addr_t addr, size_t length, uint8_t *p_data)
@@ -104,7 +103,7 @@ void mcp25625_read(mcp25625_addr_t addr, size_t length, uint8_t *p_data)
 		length = TEMP_ARRAY_BUFFER_LENGTH-1;	//Crop amount of data to write. Sorry.
 	temp_array[0] = MCP_WRITE;
 	temp_array[1] = addr;
-	spi_transaction(&temp_array,&temp_array,2+length);
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,2+length);
 	memcpy(p_data,&temp_array[2],length);
 }
 
@@ -126,7 +125,7 @@ void mcp25625_bit_modify(mcp25625_addr_t addr, uint8_t mask, uint8_t data)
 	temp_array[1] = addr;
 	temp_array[2] = mask;
 	temp_array[3] = data;
-	spi_transaction(&temp_array,NULL,4);
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,4);
 }
 
 void mcp25625_read_rx_buffer_id(mcp25625_rxb_id_t buffer_id, mcp25625_id_t *p_id)
@@ -142,7 +141,7 @@ void mcp25625_read_rx_buffer_id(mcp25625_rxb_id_t buffer_id, mcp25625_id_t *p_id
 			break;
 	}
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_id));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(*p_id));
 	memcpy(&temp_array[1], p_id, sizeof(*p_id));
 }
 
@@ -163,7 +162,7 @@ void mcp25625_load_tx_buffer_id(mcp25625_txb_id_t buffer_id, const mcp25625_id_t
 	}
 	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
 	memcpy(&temp_array[1], p_id, sizeof(*p_id));
-	spi_transaction(&temp_array,NULL,1+sizeof(*p_id));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,1+sizeof(*p_id));
 }
 
 void mcp25625_read_rx_buffer_data(mcp25625_rxb_id_t buffer_id, mcp25625_data_t *p_data)
@@ -179,7 +178,7 @@ void mcp25625_read_rx_buffer_data(mcp25625_rxb_id_t buffer_id, mcp25625_data_t *
 			break;
 	}
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_data));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(*p_data));
 	memcpy(&temp_array[1], p_data, sizeof(*p_data));
 }
 
@@ -200,7 +199,7 @@ void mcp25625_load_tx_buffer_data(mcp25625_txb_id_t buffer_id, const mcp25625_da
 	}
 	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
 	memcpy(&temp_array[1], p_data, sizeof(*p_data));
-	spi_transaction(&temp_array,NULL,1+sizeof(*p_data));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,1+sizeof(*p_data));
 }
 
 void mcp25625_read_rx_buffer_id_data(mcp25625_rxb_id_t buffer_id, mcp25625_id_data_t *p_id_data)
@@ -217,7 +216,7 @@ void mcp25625_read_rx_buffer_id_data(mcp25625_rxb_id_t buffer_id, mcp25625_id_da
 	}
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
 	//Can't know beforehand how many bytes we need. grab them all.
-	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_id_data));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(*p_id_data));
 	memcpy(&temp_array[1], p_id_data, sizeof(*p_id_data));
 }
 
@@ -240,23 +239,23 @@ void mcp25625_load_tx_buffer_id_data(mcp25625_txb_id_t buffer_id, const mcp25625
 	//No need to transfer all bytes. Read frame info
 	//and determine how many bytes are needed.
 	size_t bytes_to_transfer = p_id_data->dlc.rtr? 0 : p_id_data->dlc.dlc;
-	bytes_to_transfer >= 8? 8 : bytes_to_transfer;
+	bytes_to_transfer = bytes_to_transfer >= 8? 8 : bytes_to_transfer;
 	bytes_to_transfer += sizeof(mcp25625_id_t);
 	memcpy(&temp_array[1], p_id_data, bytes_to_transfer);
-	spi_transaction(&temp_array,NULL,1+bytes_to_transfer);
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,1+bytes_to_transfer);
 }
 
 void mcp25625_tx_request_to_send(mcp25625_txb_rts_flag_t tx_rts_flags)
 {
 	uint8_t instruction = MCP_RTS + tx_rts_flags;
-	spi_transaction(&instruction, NULL, 1);
+	spi_master_transfer_blocking(&instruction, NULL, 1);
 }
 
 mcp25625_status_t mcp25625_read_status(void)
 {
 	mcp25625_status_t status;
 	temp_array[0] = MCP_READ_STATUS;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(status));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(status));
 	memcpy(&temp_array[2], &status, sizeof(status));
 	return status;
 }
@@ -265,7 +264,7 @@ mcp25625_rx_status_t mcp25625_read_rx_status(void)
 {
 	mcp25625_rx_status_t rx_status;
 	temp_array[0] = MCP_READ_STATUS;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(rx_status));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(rx_status));
 	memcpy(&temp_array[2], &rx_status, sizeof(rx_status));
 	return rx_status;
 }

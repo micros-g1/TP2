@@ -1278,6 +1278,11 @@ typedef struct	//Using union for uniform code
 //Low Level functions
 
 /**
+ * @brief Initialize driver
+ */
+void mcp25625_driver_init(void);
+
+/**
  * @brief Sends reset command
  */
 void mcp25625_reset(void);

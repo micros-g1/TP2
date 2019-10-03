@@ -346,6 +346,10 @@ void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t l
 	// clear eoqf
 	SPI0->SR |= SPI_SR_EOQF(1);
 
+	//Clear FIFOs
+	SPI0->MCR |= SPI_MCR_CLR_RXF(1);
+	SPI0->MCR |= SPI_MCR_CLR_TXF(1);
+
 	spi_push_data_t push_data;
 
 	// if out not requested, consider pop finished
@@ -390,4 +394,5 @@ void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t l
 				push_finished = true;
 		}
 	}
+	//Clear
 }

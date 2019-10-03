@@ -58,6 +58,8 @@ void CAN_init()
 	init = true;
 	callback_message = NULL;
 	callback_overflow = NULL;
+	//Init Driver
+	mcp25625_driver_init();
 	//Reset
 	mcp25625_reset();
 	//Configure Timing (and set BLTMODE so that value of PHSEG2 is set by PHSEG2 bits in CNF3)
@@ -68,6 +70,7 @@ void CAN_init()
 	mcp25625_id_t filter = generate_filter_mask_id(ID_FILTER,DATA_FILTER,CAN_STANDARD_FRAME);
 	mcp25625_id_t mask = generate_filter_mask_id(ID_MASK,DATA_MASK,CAN_STANDARD_FRAME);
 	//Write all masks and filters
+	//LICHA: ACA SE ROMPE SPI:
 	mcp25625_write(RXF0_ADDR, sizeof(filter), (uint8_t*) &filter);
 	mcp25625_write(RXF1_ADDR, sizeof(filter), (uint8_t*) &filter);
 	mcp25625_write(RXF2_ADDR, sizeof(filter), (uint8_t*) &filter);
@@ -90,6 +93,8 @@ void CAN_init()
 	//TODO: Change to NORMAL_OPERATION after testing, loopback mode for testing.
 	mcp25625_bit_modify(CANCTRL_ADDR, REQOP | CLKEN, LOOPBACK_MODE << REQOP_POS | 0 << CLKEN_POS);
 	//While until normal operation mode is set.
+	//CUANDO TODO ESTE OK HASTA ACA, FIJATE QUE LA LECTURA ESTE FUNCIONANDO AL LLAMAR A ESTA FUNCION
+	//(CONECTA MOSI A MISO Y FIJATE QUE FUNCIONE)
 	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != LOOPBACK_MODE);
 }
 

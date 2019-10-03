@@ -30,7 +30,7 @@ typedef enum{
  * @details configures the SPI module in master mode, using a default
  * set of configurations
  */
-void spi_init(void);
+void spi_driver_init(void);
 void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t length);
 // CTAR CONFIG
 void spi_set_double_baud_rate(bool double_br);

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <SPI/spi_driver.h>
+#include <CAN/CAN.h>
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -30,6 +31,7 @@ static void delayLoop(uint32_t veces);
 int i;
 void App_Init (void)
 {
+	CAN_init();
 	//DO INIT
 }
 
@@ -38,10 +40,6 @@ void App_Run (void)
 {
 	//DO LOOP
 }
-static void delayLoop(uint32_t veces)
-{
-}
-
 
 /*******************************************************************************
  *******************************************************************************
