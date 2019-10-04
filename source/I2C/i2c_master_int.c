@@ -67,7 +67,7 @@ static void i2c_master_int_reset(i2c_modules_dr_t mod_id){
 static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 	//the order of each call is important!!!
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
-//	if(mod->last_byte_transmitted && mod->last_byte_read)	return;
+	if(mod->last_byte_transmitted && mod->last_byte_read)	return;
 
 	if(i2c_dr_get_stopf(mod_id)){
 		i2c_dr_clear_stopf(mod_id);
@@ -76,7 +76,6 @@ static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 	}
 	else if(i2c_dr_get_startf(mod_id)){
 		i2c_dr_clear_startf(mod_id);
-		i2c_dr_clear_iicif(mod_id);
 		if( ( ++(mod->starf_log_count) ) == 1)		// repeated start!
 			handle_master_mode(mod_id);
 		else if( (mod->starf_log_count)  >= 2){
@@ -110,6 +109,8 @@ static void handle_tx_mode(i2c_modules_dr_t mod_id){
 	else if( mod->last_byte_transmitted && (mod->to_be_read_length > 0) ){
 		i2c_dr_set_tx_rx_mode(mod_id, false);
 		read_byte(mod);
+		if(mod->last_byte_read)
+			i2c_dr_send_start_stop(mod_id, false);
 	}
 	else
 		write_byte(mod);
@@ -119,8 +120,10 @@ static void handle_rx_mode(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 
 	read_byte(mod);
+
 	if(mod->last_byte_read)
 		i2c_dr_send_start_stop(mod_id, false);
+
 	/*ignoring the second to last by to be read condition because i m only reading from the magnetometer!!!*/
 
 }
@@ -165,7 +168,6 @@ void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data,
 	mod->written_bytes = 0;
 
 	i2c_dr_set_tx_rx_mode(mod->id, true);
-//	i2c_dr_set_start_stop_interrupt(mod->id, false);
 	i2c_dr_set_start_stop_interrupt(mod->id, true);
 
 	i2c_dr_send_start_stop(mod->id, true);
@@ -180,8 +182,10 @@ static void read_byte(i2c_module_int_t* mod){
 
 	q_pushback(&(mod->buffer), i2c_dr_read_data(mod->id));
 
-	mod->last_byte_read = (--(mod->to_be_read_length));
+	mod->last_byte_read = !(--(mod->to_be_read_length));
 	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
+
+	i2c_dr_send_ack(mod->id, !mod->last_byte_read);
 }
 
 static void write_byte(i2c_module_int_t* mod){

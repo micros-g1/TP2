@@ -27,14 +27,19 @@
 
 /* Función que se llama una vez, al comienzo del programa */
 
+bool init = false;
 void App_Init (void)
 {
-	accel_init();
+	init = true;
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
+	if(init){
+		accel_init();
+		init = false;
+	}
 	while(1);
 	//DO LOOP
 }

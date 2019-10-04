@@ -95,6 +95,11 @@ void i2c_dr_send_start_stop(i2c_modules_dr_t mod, bool start_stop){
 void i2c_dr_send_repeated_start(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->C1) |= 1UL << 2;
 }
+void i2c_dr_send_ack(i2c_modules_dr_t mod, bool ack_value){
+	unsigned char word = i2c_dr_modules[mod]->C1;
+	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ ack_value) & (1U << 3);
+}
+
 
 /**************************************
 ****************I2Cx_S field***********
@@ -215,6 +220,9 @@ bool i2c_dr_get_stopf(i2c_modules_dr_t mod){
 void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
 }
+
+
+
 
 
 
