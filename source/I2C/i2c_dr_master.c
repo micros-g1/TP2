@@ -27,11 +27,7 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	//clock module is set to 50Mhz!!
 	i2c_pos->F = 0x2D;		//set baud rate to 78125Hz. mult == 0x0-> mult=1; scl div ==2D-> scl div=640; !!!
 
-//	i2c_pos->C1 = 0xF8;	//IICEN = 1; IICIE = 1; MST = 1; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
-//	i2c_pos->C1 = 0xD0;     //IICEN = 1; IICIE = 1; MST = 0; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
 	i2c_pos->C1 = 0xC0;	//IICEN = 1; IICIE = 1; MST = 0; TX = 0; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
-//	(i2c_pos->SMB) &= ~(1UL << 6);		//ALERTEN = 0
-//	(i2c_pos->SMB) |=  (1<<7);			//FACK = 1, should contemplate error interrupt and TXAK!!
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;
@@ -94,6 +90,10 @@ void i2c_dr_send_start_stop(i2c_modules_dr_t mod, bool start_stop){
 	 * Slave to Master when sending a start signal. */
 	unsigned char word = i2c_dr_modules[mod]->C1;
 	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ start_stop) & (1U << 5);
+}
+
+void i2c_dr_send_repeated_start(i2c_modules_dr_t mod){
+	(i2c_dr_modules[mod]->C1) |= 1UL << 2;
 }
 
 /**************************************
@@ -215,5 +215,6 @@ bool i2c_dr_get_stopf(i2c_modules_dr_t mod){
 void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
 }
+
 
 

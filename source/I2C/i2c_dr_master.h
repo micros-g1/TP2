@@ -67,6 +67,7 @@ void i2c_dr_set_tx_rx_mode(i2c_modules_dr_t mod, bool tx_mode);
  */
 void i2c_dr_send_start_stop(i2c_modules_dr_t mod, bool start_stop);
 
+void i2c_dr_send_repeated_start(i2c_modules_dr_t mod);
 /**
  * @brief I2C Get Data Transfer Complete
  * @details Gets the current status of the last data transfer.

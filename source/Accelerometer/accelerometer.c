@@ -83,11 +83,10 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
 	i2c_master_int_read_data(&i2c_module, &question, 1 , 1);
 
-	wait_for(10000);
 
 	unsigned char data[2] = {0, 0};
-
-	if(i2c_master_int_has_new_data(&i2c_module)){
+//	while(1);
+	while(!i2c_master_int_has_new_data(&i2c_module)){
 		wait_for(10000);
 		if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
 			return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
@@ -97,8 +96,7 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 				return (I2C_ERROR);
 		}
 	}
-	else
-		return I2C_ERROR;
+
 
 	wait_for(1000);
 

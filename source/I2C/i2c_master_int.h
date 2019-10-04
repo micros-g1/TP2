@@ -44,6 +44,7 @@ typedef struct{
 	int to_be_written_length;			//amount of bytes to be written in the current write request
 	int written_bytes;
 
+	bool rs_sent;
 	//rx mode
 	bool last_byte_read;
 	bool second_2_last_byte_2_be_read;

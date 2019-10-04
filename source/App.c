@@ -35,6 +35,7 @@ void App_Init (void)
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
+	while(1);
 	//DO LOOP
 }
 
