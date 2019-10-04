@@ -88,6 +88,9 @@ void spi_driver_mcr_init(void){
 
     //CONT_SCKE. Continuous SCK enabled.
     SPI0->MCR &= ~SPI_MCR_CONT_SCKE(1);
+
+    //FRZ
+    //SPI0->MCR |= SPI_MCR_FRZ(1);
 }
 
 /**
@@ -329,7 +332,7 @@ void spi_push_frame(spi_push_data_t push_data){
 				word |= SPI_PUSHR_EOQ(1);
 			if(push_data.cont_clear)
 				word |= SPI_PUSHR_CTCNT(1);
-			word |= SPI_PUSHR_CONT(push_data.pcs_assert);
+			word |= SPI_PUSHR_PCS(push_data.pcs_assert);
 			word |= SPI_PUSHR_TXDATA(push_data.data);
 
 			SPI0->PUSHR = word;
@@ -385,6 +388,7 @@ void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t l
 
 			spi_driver_halt_module(false);
 			while(!(SPI0->SR & SPI_SR_TCF_MASK));
+			SPI0->SR |= SPI_SR_TCF(1);
 			spi_driver_halt_module(true);
 			// clear tfff
 			SPI0->SR |= SPI_SR_TFFF_MASK;

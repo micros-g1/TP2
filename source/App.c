@@ -12,7 +12,6 @@
 #include <stdbool.h>
 #include <SPI/spi_driver.h>
 #include <CAN/CAN.h>
-
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -31,14 +30,26 @@ static void delayLoop(uint32_t veces);
 int i;
 void App_Init (void)
 {
-	CAN_init();
+	CAN_init(0,0);
 	//DO INIT
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	//DO LOOP
+	can_message_t message,rec_message;
+	message.fir.dlc = 1;
+	message.fir.frame_type = CAN_STANDARD_FRAME;
+	message.fir.rtr = false;
+	message.message_id = 0;
+	message.data[0] = 0xFF;
+	while(true)
+	{
+		CAN_send(&message);
+		CAN_send(&message);
+		CAN_get(&rec_message);
+		CAN_get(&rec_message);
+	}
 }
 
 /*******************************************************************************

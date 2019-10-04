@@ -46,25 +46,11 @@ enum { PA, PB, PC, PD, PE };
 #endif // LOW
 
 
-// IRQ modes
-enum {
-    GPIO_IRQ_MODE_DISABLE,
-    GPIO_IRQ_MODE_RISING_EDGE,
-    GPIO_IRQ_MODE_FALLING_EDGE,
-    GPIO_IRQ_MODE_BOTH_EDGES,
-
-    GPIO_IRQ_CANT_MODES
-};
-
-
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
 
 typedef uint8_t pin_t;
-
-typedef void (*pinIrqFun_t)(void);
-
 
 /*******************************************************************************
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
@@ -81,14 +67,6 @@ typedef void (*pinIrqFun_t)(void);
  */
 void gpioMode (pin_t pin, uint8_t mode);
 
-/**
- * @brief Configures how the pin reacts when an IRQ event ocurrs
- * @param pin the pin whose IRQ mode you wish to set (according PORTNUM2PIN)
- * @param irqMode disable, risingEdge, fallingEdge or bothEdges
- * @param irqFun function to call on pin event
- * @return Registration succeed
- */
-bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun);
 
 /**
  * @brief Write a HIGH or a LOW value to a digital pin
@@ -110,7 +88,6 @@ void gpioToggle (pin_t pin);
  */
 bool gpioRead (pin_t pin);
 
-void interrupts_init();
 /*******************************************************************************
  ******************************************************************************/
 
