@@ -61,6 +61,7 @@ void accel_init(){
 	pin_config(ACCEL_SDA_PIN);
 	i2c_master_int_init(I2C0_INT_MOD, &i2c_module);
 
+	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
 
 	systick_init();
 	config_ok = I2C_ERROR;
@@ -87,7 +88,7 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 	unsigned char data[2] = {0, 0};
 
 	if(i2c_master_int_has_new_data(&i2c_module)){
-		wait_for(1000);
+		wait_for(10000);
 		if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
 			return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
 		else {
@@ -129,6 +130,8 @@ static void pin_config(int pin){
 	port->PCR[pin_num] |= PORT_PCR_MUX(5);
 	port->PCR[pin_num] |= 1 << PORT_PCR_ISF_SHIFT;
 	port->PCR[pin_num] |= PORT_PCR_ODE_MASK;
+	port->PCR[pin_num] |= PORT_PCR_PE_MASK;
+	port->PCR[pin_num] |= PORT_PCR_PS(1);
 }
 
 accel_raw_data_t accel_get_last_data(){

@@ -11,4 +11,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+//#define SETBIT(PIN,N) (PIN |=  (1<<N))
+//#define CLRBIT(PIN,N) (PIN &= ~(1<<N))
 #endif /* GENERAL_H_ */

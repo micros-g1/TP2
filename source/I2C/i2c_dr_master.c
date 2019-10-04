@@ -8,6 +8,7 @@
 #include <I2C/i2c_dr_master.h>
 #include "MK64F12.h"
 #include "stdlib.h"
+#include "general.h"
 
 #define I2C_CLK_FREQ	50000000
 
@@ -30,13 +31,15 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 //	i2c_pos->C1 = 0xD0;     //IICEN = 1; IICIE = 1; MST = 0; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
 	i2c_pos->C1 = 0xC0;	//IICEN = 1; IICIE = 1; MST = 0; TX = 0; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
 //	(i2c_pos->SMB) &= ~(1UL << 6);		//ALERTEN = 0
-	(i2c_pos->SMB) &= ~(1UL << 7);		//FACK = 0, SHOULD BE CONTEMPLATED IN i2c_dr_master IF NOT!!
+//	(i2c_pos->SMB) |=  (1<<7);			//FACK = 1, should contemplate error interrupt and TXAK!!
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;
 
+	i2c_pos->FLT |= I2C_FLT_SSIE_MASK;
 	uint32_t irq_interrupts[] = I2C_IRQS;//get the module interrupt
 	NVIC_EnableIRQ(irq_interrupts[mod]);	//enable the module interrupt.
+
 	i2c_dr_clear_startf(mod);
 	initialized[mod] = true;
 }

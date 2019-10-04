@@ -29,14 +29,6 @@
 
 void App_Init (void)
 {
-//	i2c_module_int_t mod;
-//	i2c_master_int_init(I2C0_INT_MOD, &mod);
-//	pin_config(ACCEL_SCL_PIN);
-//	pin_config(ACCEL_SDA_PIN);
-//	i2c_master_int_set_slave_add(&mod, 0x1E);
-//
-//	i2c_master_int_read_data(&mod, unsigned char* question, int len_question, int amount_of_bytes);
-
 	accel_init();
 }
 

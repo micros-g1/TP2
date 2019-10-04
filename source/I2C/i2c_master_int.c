@@ -35,7 +35,7 @@ static void read_byte(i2c_module_int_t* mod);
 static void write_byte(i2c_module_int_t* mod);
 
 
-
+int check_start_f = 0;
 /*-------------------------------------------
  ----------FUNCTION_IMPLEMENTATION-----------
  -------------------------------------------*/
@@ -73,12 +73,12 @@ static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 		i2c_dr_clear_iicif(mod_id);
 		mod->starf_log_count = 0;
 	}
-	else if(i2c_dr_get_startf(mod_id)){
-		i2c_dr_clear_startf(mod_id);
-		i2c_dr_clear_iicif(mod_id);
-		if( ( ++(mod->starf_log_count) ) > 1)		// repeated start!
-			handle_master_mode(mod_id);
-	}
+//	else if(i2c_dr_get_startf(mod_id)){
+//		i2c_dr_clear_startf(mod_id);
+//		i2c_dr_clear_iicif(mod_id);
+//		if( ( ++(mod->starf_log_count) ) > 1)		// repeated start!
+//			handle_master_mode(mod_id);
+//	}
 	else{
 		i2c_dr_clear_iicif(mod_id);
 		handle_master_mode(mod_id);
@@ -92,8 +92,9 @@ static void handle_master_mode(i2c_modules_dr_t mod_id){
 static void handle_tx_mode(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 
-	if(mod->last_byte_transmitted || i2c_dr_get_rxak(mod_id))
+	if(mod->last_byte_transmitted || i2c_dr_get_rxak(mod_id)){
 		i2c_dr_send_start_stop(mod_id, false);
+	}
 	else if(mod->last_byte_transmitted && (mod->to_be_read_length > 0) ){
 		i2c_dr_set_tx_rx_mode(mod_id, false);
 		read_byte(mod);
@@ -154,6 +155,10 @@ void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data,
 	i2c_dr_set_tx_rx_mode(mod->id, true);
 	i2c_dr_send_start_stop(mod->id, true);
 	write_byte(mod);
+	i2c_dr_set_start_stop_interrupt(mod->id, false);
+	i2c_dr_clear_startf(mod->id);
+	i2c_dr_clear_iicif(mod->id);
+	check_start_f++;
 }
 
 
