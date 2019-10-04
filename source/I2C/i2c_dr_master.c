@@ -25,16 +25,19 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 
 	//clock module is set to 50Mhz!!
 	i2c_pos->F = 0x2D;		//set baud rate to 78125Hz. mult == 0x0-> mult=1; scl div ==2D-> scl div=640; !!!
-	i2c_pos->C1 = 0xF8;	//IICEN = 1; IICIE = 1; MST = 1; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
-	(i2c_pos->SMB) &= ~(1UL << 6);		//ALERTEN = 0
-	(i2c_pos->SMB) &= ~(1UL << 7);		//FACK = 0, SHOULD BE CONTEMPLATED IN i2c_dt_master IF NOT!!
+
+//	i2c_pos->C1 = 0xF8;	//IICEN = 1; IICIE = 1; MST = 1; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
+//	i2c_pos->C1 = 0xD0;     //IICEN = 1; IICIE = 1; MST = 0; TX = 1; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
+	i2c_pos->C1 = 0xC0;	//IICEN = 1; IICIE = 1; MST = 0; TX = 0; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
+//	(i2c_pos->SMB) &= ~(1UL << 6);		//ALERTEN = 0
+	(i2c_pos->SMB) &= ~(1UL << 7);		//FACK = 0, SHOULD BE CONTEMPLATED IN i2c_dr_master IF NOT!!
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;
 
 	uint32_t irq_interrupts[] = I2C_IRQS;//get the module interrupt
 	NVIC_EnableIRQ(irq_interrupts[mod]);	//enable the module interrupt.
-
+	i2c_dr_clear_startf(mod);
 	initialized[mod] = true;
 }
 static void clock_gating_mod(i2c_modules_dr_t mod){
@@ -50,13 +53,13 @@ static void clock_gating_mod(i2c_modules_dr_t mod){
 
 }
 void I2C0_IRQHandler(){
-	interruption_callback[I2C0_DR_MOD]();
+	interruption_callback[I2C0_DR_MOD](I2C0_DR_MOD);
 }
 void I2C1_IRQHandler(){
-	interruption_callback[I2C1_DR_MOD]();
+	interruption_callback[I2C1_DR_MOD](I2C1_DR_MOD);
 }
 void I2C2_IRQHandler(){
-	interruption_callback[I2C2_DR_MOD]();
+	interruption_callback[I2C2_DR_MOD](I2C2_DR_MOD);
 }
 /**************************************
 ****************I2Cx_C1 field***********
@@ -124,7 +127,8 @@ void i2c_dr_clear_iicif(i2c_modules_dr_t mod){
 	 * This bit sets when an interrupt is pending. This bit must be cleared by software by writing 1 to it, such as in
 	 * the interrupt routine.
 	*/
-	(i2c_dr_modules[mod]->S) |= 1UL << 1;
+	(i2c_dr_modules[mod]->S) |= I2C_S_IICIF_MASK;
+
 }
 bool i2c_dr_get_iicif(i2c_modules_dr_t mod){
 	/* IICIF -- see i2c_dr_clear_iicif also for more information
@@ -195,14 +199,18 @@ void i2c_dr_clear_startf(i2c_modules_dr_t mod){
 	/*STARTF -- see i2c_dr_get_startf for more information
 	*The STARTF bit must be cleared by writing 1 to it.
 	*/
-	(i2c_dr_modules[mod]->FLT) |= 1UL << 4;
+//	I2C_FLT_FLT_MASK
+	i2c_dr_modules[mod]->FLT |= I2C_FLT_STARTF(1);
+//	(i2c_dr_modules[mod]->FLT) |= 1UL << 4;
 }
 
 bool i2c_dr_get_stopf(i2c_modules_dr_t mod){
 	return ((i2c_dr_modules[mod]->FLT) >> 6) & 1U;
-}
 
+}
 
 void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
 }
+
+

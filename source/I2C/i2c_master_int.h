@@ -19,7 +19,7 @@
  * @define MAX_WRITE_CHARS
  * @brief maximum amount of bytes that can be written in a single write message.
  */
-#define MAX_WRITE_CHARS	4
+#define MAX_WRITE_CHARS	8
 /**
  * @typedef enum i2c_modules_int_t
  * @brief I2C interface modules
@@ -121,5 +121,6 @@ void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data
 void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data, int amount_of_bytes);
 
 void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add);
+
 
 #endif /* I2C_I2C_MASTER_INT_H_ */

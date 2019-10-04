@@ -17,7 +17,7 @@
 
 
 // ACCEL I2C address
-#define ACCEL_SLAVE_ADDR 0x1E // with pins SA0=0, SA1=0
+#define ACCEL_SLAVE_ADDR 0x1D
 
 
 // ACCEL internal register addresses
@@ -57,20 +57,18 @@ void accel_init(){
 	bool initialized = false;
 	if(initialized) return;
 
-
-	i2c_master_int_init(I2C0_INT_MOD, &i2c_module);
 	pin_config(ACCEL_SCL_PIN);
 	pin_config(ACCEL_SDA_PIN);
+	i2c_master_int_init(I2C0_INT_MOD, &i2c_module);
+
 
 	systick_init();
-
-
 	config_ok = I2C_ERROR;
 
 	while(_mqx_ints_FXOS8700CQ_start() != I2C_ERROR);
+//	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
+//	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
 
-	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
-	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
 	initialized = true;
 
 }
@@ -80,14 +78,16 @@ void accel_init(){
 static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 
 	unsigned char question = ACCEL_WHOAMI;
-	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
 
+	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
 	i2c_master_int_read_data(&i2c_module, &question, 1 , 1);
-	wait_for(1000);
+
+	wait_for(10000);
 
 	unsigned char data[2] = {0, 0};
 
 	if(i2c_master_int_has_new_data(&i2c_module)){
+		wait_for(1000);
 		if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
 			return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
 		else {
@@ -96,6 +96,9 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 				return (I2C_ERROR);
 		}
 	}
+	else
+		return I2C_ERROR;
+
 	wait_for(1000);
 
 	write_reg_and_wait(ACCEL_M_CTRL_REG1, 0x00, 1000);
@@ -125,6 +128,7 @@ static void pin_config(int pin){
 	port->PCR[pin_num] = 0;
 	port->PCR[pin_num] |= PORT_PCR_MUX(5);
 	port->PCR[pin_num] |= 1 << PORT_PCR_ISF_SHIFT;
+	port->PCR[pin_num] |= PORT_PCR_ODE_MASK;
 }
 
 accel_raw_data_t accel_get_last_data(){

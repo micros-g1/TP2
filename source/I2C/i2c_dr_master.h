@@ -26,7 +26,7 @@ typedef enum {I2C0_DR_MOD, I2C1_DR_MOD, I2C2_DR_MOD, AMOUNT_I2C_DR_MOD} i2c_modu
  * @brief I2C callback to be called whenever a hardware interrupt related to
  * the I2C master driver is called. See also i2c_dr_master_init().
  */
-typedef void (*i2c_service_callback_t)(void);
+typedef void (*i2c_service_callback_t)(i2c_modules_dr_t mod_id);
 
 /**
  * @brief I2C initialize master mode register configuration.
@@ -149,6 +149,9 @@ bool i2c_dr_get_stopf(i2c_modules_dr_t mod);
  * @details Clears the stopf interrupt flag, see also i2c_dr_get_stopf() .
  */
 void i2c_dr_clear_stopf(i2c_modules_dr_t mod);
+
+
+;
 
 
 #endif /* I2C_I2C_DR_MASTER_H_ */
