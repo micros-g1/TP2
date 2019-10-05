@@ -1,0 +1,87 @@
+/***************************************************************************//**
+  @file     board_manager.h
+  @brief    ...
+  @author   Rocio Parra
+ ******************************************************************************/
+
+
+#ifndef SOURCE_BOARD_MANAGER_H
+#define SOURCE_BOARD_MANAGER_H
+
+
+/*******************************************************************************
+ * INCLUDE HEADER FILES
+ ******************************************************************************/
+
+#include "board_type.h"
+/*******************************************************************************
+ * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
+ ******************************************************************************/
+
+#define N_MAX_BOARDS        8
+#define ANGLE_TIMEOUT_MS    1000    // external boards are considered 'dead' after this time without new data
+#define BA_UPDATE_MS        500     // resend angles from internal boards after this time has elapsed
+
+
+/*******************************************************************************
+ * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
+ ******************************************************************************/
+
+
+
+/*******************************************************************************
+ * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ * FUNCTION PROTOTYPES WITH GLOBAL SCOPE
+ ******************************************************************************/
+
+/**
+ * @brief Initialize board manager
+*/
+void bd_init(void);
+
+/**
+ * @brief Register new board in data base
+ * @param id: Identification number for new board [0-7]
+ * @param internal: Is this board internal or external?
+ * */
+void bd_add_board(uint8_t id, bool internal);
+
+/**
+ * @brief Register new angle values for existing board
+ * @param id: board number
+ * @param angle_type: which angle do you want to update?
+ * @param value: new angle value */
+void bd_update(uint8_t id, angle_type_t angle_type, int32_t value);
+
+/**
+ * @brief Get last angle data
+ * @param id: Board ID
+ * @param angle_type: Which angle do you want?
+ * @return Last angle data. UINT32_MAX if error
+ */
+int32_t bd_get_angle(uint8_t id, angle_type_t angle_type);
+
+
+/**
+ * @brief Check whether a certain ID corresponds to a current valid board
+ * @param id: Board ID
+ * @return False: the board was disconnected or never initialized, or ID is not valid
+ */
+bool bd_is_ok(uint8_t id);
+
+bool bd_newdata_any(uint8_t id);
+bool bd_newdata(uint8_t id, angle_type_t angle_type);
+
+
+
+
+
+/*******************************************************************************
+ ******************************************************************************/
+
+
+#endif //SOURCE_BOARD_MANAGER_H

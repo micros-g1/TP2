@@ -1,53 +1,51 @@
 //
-// Created by Rocío Parra on 9/9/2019.
+// Created by Rocío Parra on 10/4/2019.
 //
 
-#include "queue.h"
+#include "msg_queue.h"
 #include "hardware.h"
+#include <string.h>
 
 
-
-void q_init(msg_queue_t * q)
+void mq_init(msg_queue_t * q)
 {
-	q->len = q->in = q->out = 0;
+    q->len = q->in = q->out = 0;
 }
 
 
 //Wait for data
-uint8_t q_read_blocking(msg_queue_t * q)
+void mq_read_blocking(msg_queue_t * q, char * data)
 {
-	uint8_t ans;
     //Atomic operation (assembly)
     while(q->len == 0) {;} // wait for data
 
-    ans = q->buffer[q->out++];
+    strcpy(data, q->buffer[q->out++]);
     if(q->out == Q_MAX_LENGTH) {
         q-> out = 0;
     }
     //Atomic operation (assembly)
     q->len--;
-
-    return ans;
 }
 
 //Flush queue
-void q_flush(msg_queue_t * q)
+void mq_flush(msg_queue_t * q)
 {
     hw_DisableInterrupts();
     //Must set these three variables to zero before continuing...
-    q_init(q);
+    mq_init(q);
     hw_EnableInterrupts();
 }
 
 //Add data to queue
-bool q_pushback(msg_queue_t * q, uint8_t data)
+bool mq_pushback(msg_queue_t * q, char * data)
 {
     bool ret_val = false;
     hw_DisableInterrupts();
 
     if(q->len != Q_MAX_LENGTH)
     {
-        q->buffer[q->in++] = data;
+        data[Q_MSG_LEN]=0; // assure there is a terminator
+        strcpy(q->buffer[q->in++], data);
         if(q->in == Q_MAX_LENGTH)
             q->in = 0;
         q->len++;
@@ -59,17 +57,18 @@ bool q_pushback(msg_queue_t * q, uint8_t data)
 
 
 //Add data to queue
-bool q_pushfront(msg_queue_t * q, uint8_t data)
+bool mq_pushfront(msg_queue_t * q, char * data)
 {
     bool ret_val = false;
     hw_DisableInterrupts();
 
     if(q->len != Q_MAX_LENGTH) {
-    	if(q->out == 0) {
-    		q->out = Q_MAX_LENGTH;
-    	}
-    	q->out--;
-        q->buffer[q->out] = data;
+        if(q->out == 0) {
+            q->out = Q_MAX_LENGTH;
+        }
+        data[Q_MSG_LEN] = 0;
+        q->out--;
+        strcpy(q->buffer[q->out], data);
         q->len++;
         ret_val = true;
     }
@@ -79,34 +78,30 @@ bool q_pushfront(msg_queue_t * q, uint8_t data)
 
 
 //Get current queue length
-unsigned int q_length(msg_queue_t * q)
+unsigned int mq_length(msg_queue_t * q)
 {
     //atomic read operation (assembly)
     return q->len;
 }
 
-bool q_isfull(msg_queue_t * q)
+bool mq_isfull(msg_queue_t * q)
 {
-	return q->len == Q_MAX_LENGTH;
+    return q->len == Q_MAX_LENGTH;
 }
 
 
 
-uint8_t q_popfront(msg_queue_t * q)
+void mq_popfront(msg_queue_t * q, char * data)
 {
-	uint8_t data = 0;
-
-    if (q->len) {
+   if (q->len) {
         q->len--;
 
-        data = q->buffer[q->out++];
+        strcpy(data, q->buffer[q->out++]);
         if(q->out == Q_MAX_LENGTH) {
-        	q->out = 0;
+            q->out = 0;
         }
         //DEBUG
 //        if(q.len == Q_MAX_LENGTH)
 //        	q.len = Q_MAX_LENGTH+1;
     }
-
-    return data;
 }

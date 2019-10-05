@@ -12,7 +12,7 @@
 #include "gpio.h"
 
 #include "util/queue.h"
-#include "util/Systick.h"
+#include "util/SysTick.h"
 
 UART_Type * uarts[UART_N_IDS] = {UART0, UART1, UART2, UART3, UART4};
 bool uart_active[UART_N_IDS] = {false, false, false, false, false};
@@ -31,8 +31,8 @@ uint32_t clock_gating_masks[UART_N_IDS] = { SIM_SCGC4_UART0_MASK, SIM_SCGC4_UART
 
 
 
-static volatile queue_t tx_q[UART_N_IDS];
-static volatile queue_t rx_q[UART_N_IDS];
+static volatile msg_queue_t tx_q[UART_N_IDS];
+static volatile msg_queue_t rx_q[UART_N_IDS];
 
 
 void uart_irq_handler(uint8_t id);
