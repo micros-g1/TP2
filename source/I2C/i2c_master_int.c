@@ -11,10 +11,12 @@
 #include <I2C/i2c_master_int.h>
 #include "util/queue.h"
 #include <stdlib.h>
+#include "gpio.h"
 /*-------------------------------------------
  ----------------DEFINES---------------------
  -------------------------------------------*/
-
+#define DEBUG_PIN 	PORTNUM2PIN (PC, 4)
+#define DEBUG_READ	PORTNUM2PIN	(PD, 0)
 
 /*-------------------------------------------
  ----------------GLOBAL_VARIABLES------------
@@ -47,6 +49,9 @@ void i2c_master_int_init(i2c_module_id_int_t mod_id, i2c_module_int_t* mod){
 	i2cm_mods[mod_id] = mod;
 
 	i2c_master_int_reset(mod_id);
+	gpioMode(DEBUG_PIN, OUTPUT);
+	gpioMode(DEBUG_READ, OUTPUT);
+
 	initialized[mod_id] = true;
 }
 
@@ -67,8 +72,10 @@ static void i2c_master_int_reset(i2c_modules_dr_t mod_id){
 static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 	//the order of each call is important!!!
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
-	if(mod->last_byte_transmitted && mod->last_byte_read)	return;
-
+	if(mod->last_byte_transmitted && mod->last_byte_read){
+		i2c_dr_clear_iicif(mod_id);
+		return;
+	}
 	if(i2c_dr_get_stopf(mod_id)){
 		i2c_dr_clear_stopf(mod_id);
 		i2c_dr_clear_iicif(mod_id);
@@ -76,9 +83,11 @@ static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 	}
 	else if(i2c_dr_get_startf(mod_id)){
 		i2c_dr_clear_startf(mod_id);
-		if( ( ++(mod->starf_log_count) ) == 1)		// repeated start!
+		i2c_dr_clear_iicif(mod_id);
+
+		if( ( ++(mod->starf_log_count) ) == 1)
 			handle_master_mode(mod_id);
-		else if( (mod->starf_log_count)  >= 2){
+		else if( (mod->starf_log_count)  >= 2){	// repeated start!
 			mod->rs_sent = true;
 			handle_master_mode(mod_id);
 		}
@@ -98,31 +107,34 @@ static void handle_tx_mode(i2c_modules_dr_t mod_id){
 
 	if(( mod->last_byte_transmitted || i2c_dr_get_rxak(mod_id) ) && (mod->to_be_read_length == 0))
 		i2c_dr_send_start_stop(mod_id, false);
-
 	else if( ( (mod->to_be_written_length - mod->written_bytes) == 1 ) && (mod->to_be_read_length > 0) ){
-
 		if(!mod->rs_sent)
 			i2c_dr_send_repeated_start(mod_id);
 		else
 			write_byte(mod);
 	}
-	else if( mod->last_byte_transmitted && (mod->to_be_read_length > 0) ){
-		i2c_dr_set_tx_rx_mode(mod_id, false);
+	else if(mod->last_byte_transmitted){
+		i2c_dr_set_tx_rx_mode(mod->id, false);
 		read_byte(mod);
-		if(mod->last_byte_read)
-			i2c_dr_send_start_stop(mod_id, false);
+//		i2c_dr_send_start_stop(mod->id, false);
+//		i2c_dr_send_ack(mod->id, true);
 	}
-	else
+	else{
 		write_byte(mod);
+	}
 
 }
 static void handle_rx_mode(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 
-	read_byte(mod);
-
 	if(mod->last_byte_read)
 		i2c_dr_send_start_stop(mod_id, false);
+	else{
+		read_byte(mod);
+
+		if(mod->last_byte_read)
+			i2c_dr_send_start_stop(mod_id, false);
+	}
 
 	/*ignoring the second to last by to be read condition because i m only reading from the magnetometer!!!*/
 
@@ -139,9 +151,10 @@ void i2c_master_int_read_data(i2c_module_int_t* mod, unsigned char* question, in
 		mod->to_be_written[mod->to_be_written_length] = (mod->slave_address << 1) | 1u;
 		(mod->to_be_written_length)++;
 	}
-	else
+	else{
 		i2c_master_int_write_data(mod, NULL, 0);
-
+		mod->to_be_written[0] = (mod->slave_address << 1) | 1u;
+	}
 	mod->to_be_read_length = amount_of_bytes;
 	mod->last_byte_read = false;
 	mod->second_2_last_byte_2_be_read = (mod->to_be_read_length > 1);
@@ -179,16 +192,23 @@ void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add
 }
 
 static void read_byte(i2c_module_int_t* mod){
+	i2c_dr_send_ack(mod->id, mod->last_byte_read);
 
-	q_pushback(&(mod->buffer), i2c_dr_read_data(mod->id));
+	gpioToggle(DEBUG_READ);
+	unsigned char data= i2c_dr_read_data(mod->id);
+	q_pushback(&(mod->buffer), data);
 
 	mod->last_byte_read = !(--(mod->to_be_read_length));
 	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
+//	i2c_dr_send_ack(mod->id, mod->last_byte_read);
 
-	i2c_dr_send_ack(mod->id, !mod->last_byte_read);
+//	if(mod->last_byte_read)
+//		i2c_dr_send_start_stop(mod->id, false);
 }
 
 static void write_byte(i2c_module_int_t* mod){
+	gpioToggle(DEBUG_PIN);
+
 	i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);
 	mod->last_byte_transmitted = ( (++mod->written_bytes) >= mod->to_be_written_length );
 }

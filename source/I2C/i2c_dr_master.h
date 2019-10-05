@@ -154,5 +154,6 @@ void i2c_dr_clear_stopf(i2c_modules_dr_t mod);
 
 void i2c_dr_send_ack(i2c_modules_dr_t mod, bool ack_value);
 
+bool  i2c_dr_get_mst(i2c_modules_dr_t mod);
 
 #endif /* I2C_I2C_DR_MASTER_H_ */

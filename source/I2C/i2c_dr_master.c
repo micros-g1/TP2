@@ -25,12 +25,16 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	I2C_Type* i2c_pos = i2c_dr_modules[mod];
 
 	//clock module is set to 50Mhz!!
-	i2c_pos->F = 0x2D;		//set baud rate to 78125Hz. mult == 0x0-> mult=1; scl div ==2D-> scl div=640; !!!
+//	i2c_pos->F = 0x2D;		//set baud rate to 78125Hz. mult == 0x0-> mult=1; scl div ==2D-> scl div=640; !!!
+//	i2c_pos->F = 0x28;		//set baud rate to 156250Hz. mult == 0x0-> mult=1; scl div ==28-> scl div=320; !!!
+	i2c_pos->F = 0x2E;		//set baud rate to Hz. mult == 0x0-> mult=1; scl div ==2E-> scl div=768; !!!
 
+//	i2c_pos->F = I2C_F_ICR(0x20) | I2C_F_MULT(0x2);
 	i2c_pos->C1 = 0xC0;	//IICEN = 1; IICIE = 1; MST = 0; TX = 0; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;
+//	i2c_pos->SMB |= 1UL << 7;		//FACK to 1.
 
 	i2c_pos->FLT |= I2C_FLT_SSIE_MASK;
 	uint32_t irq_interrupts[] = I2C_IRQS;//get the module interrupt
@@ -78,7 +82,9 @@ void I2C2_IRQHandler(){
 bool i2c_dr_get_tx_rx_mode(i2c_modules_dr_t mod){
 	return ((i2c_dr_modules[mod]->C1) >> 4) & 1U;
 }
-
+bool  i2c_dr_get_mst(i2c_modules_dr_t mod){
+	return ((i2c_dr_modules[mod]->C1) >> 5) & 1U;
+}
 void i2c_dr_set_tx_rx_mode(i2c_modules_dr_t mod, bool tx_mode){
 	unsigned char word = i2c_dr_modules[mod]->C1;
 	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)tx_mode ^ word) & (1U << 4);
@@ -89,7 +95,9 @@ void i2c_dr_send_start_stop(i2c_modules_dr_t mod, bool start_stop){
 	 * Master to slave when sending a stop signal.
 	 * Slave to Master when sending a start signal. */
 	unsigned char word = i2c_dr_modules[mod]->C1;
-	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ start_stop) & (1U << 5);
+	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)start_stop ^ word) & (1U << 5);
+//	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ start_stop) & (1U << 5);
+
 }
 
 void i2c_dr_send_repeated_start(i2c_modules_dr_t mod){
@@ -97,7 +105,7 @@ void i2c_dr_send_repeated_start(i2c_modules_dr_t mod){
 }
 void i2c_dr_send_ack(i2c_modules_dr_t mod, bool ack_value){
 	unsigned char word = i2c_dr_modules[mod]->C1;
-	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ ack_value) & (1U << 3);
+	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)ack_value ^ word) & (1U << 3);
 }
 
 

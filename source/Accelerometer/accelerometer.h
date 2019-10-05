@@ -10,7 +10,8 @@
 #define ACCELEROMETER_ACCELEROMETER_H_
 #include "general.h"
 
-typedef enum {ACCEL_X, ACCEL_Y, ACCEL_Z, ACCEL_ALL} accel_data_coords_t;
+
+typedef enum {ACCEL_ACCEL_DATA, ACCEL_MAGNET_DATA} accel_data_options_t;
 
 typedef struct {
 	uint16_t x;
@@ -24,14 +25,8 @@ typedef struct {
  * Has no effect when called twice with the same module (safe init).
  */
 void accel_init();
-/**
- * @brief I2C Master, get new data
- * @details I2C Master, get data from buffer.
- * Should know that there is new data to be read before calling this function!!!
- * ( See also i2c_master_int_has_new_data() )
- * @return new data from buffer.
- */
-accel_raw_data_t accel_get_last_data();
+
+accel_raw_data_t accel_get_last_data(accel_data_options_t data_option);
 
 
 

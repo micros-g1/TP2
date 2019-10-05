@@ -78,24 +78,25 @@ void accel_init(){
 // function configures FXOS8700CQ combination accelerometer and magnetometer sensor
 static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 
-	unsigned char question = ACCEL_WHOAMI;
+//	unsigned char question = ACCEL_WHOAMI;
+	unsigned char question[2] = {ACCEL_WHOAMI, ACCEL_WHOAMI};
 
 	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
-	i2c_master_int_read_data(&i2c_module, &question, 1 , 1);
-
+	i2c_master_int_write_data(&i2c_module, question, 1);
+//	i2c_master_int_read_data(&i2c_module, question, 1 , 1);
 
 	unsigned char data[2] = {0, 0};
 
-	while(!i2c_master_int_has_new_data(&i2c_module));
-
 	while(!i2c_master_int_has_new_data(&i2c_module)){
-		if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
-			return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
-		else {
-			i2c_master_int_get_new_data(&i2c_module, data, 1);
-			if(data[0] != ACCEL_WHOAMI_VAL)
-				return (I2C_ERROR);
-		}
+
+	}
+
+	if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
+		return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
+	else {
+		i2c_master_int_get_new_data(&i2c_module, data, 1);
+		if(data[0] != ACCEL_WHOAMI_VAL)
+			return (I2C_ERROR);
 	}
 
 	wait_for(1000);
@@ -132,9 +133,6 @@ static void pin_config(int pin){
 	port->PCR[pin_num] |= PORT_PCR_PS(1);
 }
 
-accel_raw_data_t accel_get_last_data(){
-	return last_read_data;
-}
 
 static void config_delay(int reload){
 	static bool first_config = true;
@@ -169,4 +167,9 @@ static void write_reg_and_wait(unsigned char reg, unsigned char data, int reload
 static void wait_for(int reload){
 	config_delay(reload);
 	while(!delaying);
+}
+
+accel_raw_data_t accel_get_last_data(accel_data_options_t data_option){
+	accel_raw_data_t data;
+	return data;
 }
