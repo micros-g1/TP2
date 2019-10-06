@@ -63,8 +63,8 @@ void accel_init(){
 	systick_init();
 
 	while(start() == I2C_ERROR);
-//	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
-//	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
+	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
+	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
 
 	initialized = true;
 
@@ -108,9 +108,6 @@ static accel_errors_t start(){
 
 	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
 
-	handling_reading_calls();
-	handling_reading();
-
 	return I2C_OK;
 }
 
@@ -131,6 +128,8 @@ static void pin_config(int pin){
 
 
 static void handling_reading(){
+	systick_disable_callback(handling_reading_calls);		//cant try to read now because that will empty the buffer!!!
+
 	//reads the last ACC_DATA_PACK_LEN (exactly!!) amount of bytes from the i2c master buffer.
 	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN)){
 		i2c_master_int_get_new_data(I2C0_INT_MOD, reading_buffer, ACCEL_DATA_PACK_LEN);
@@ -146,12 +145,17 @@ static void handling_reading(){
 		last_read_data_acc.y = (reading_buffer[9] << 8) | reading_buffer[10];
 		last_read_data_acc.z = (reading_buffer[11] << 8) | reading_buffer[12];
 	}
+	systick_enable_callback(handling_reading_calls);		//can now try to read
 }
 
 static void handling_reading_calls(){
+
 	unsigned char read_addr = ACCEL_STATUS;
-	if(!i2c_master_int_bus_busy(I2C0_INT_MOD))
+	if(!i2c_master_int_bus_busy(I2C0_INT_MOD)){
+		systick_disable_callback(handling_reading);		//cant update data while reading it!
 		i2c_master_int_read_data(I2C0_INT_MOD, &read_addr, 1, ACCEL_DATA_PACK_LEN);
+		systick_enable_callback(handling_reading);		//can now update data if necessary
+	}
 }
 
 static void write_reg(unsigned char reg, unsigned char data){

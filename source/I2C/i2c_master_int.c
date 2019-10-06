@@ -194,13 +194,13 @@ void i2c_master_int_read_data(i2c_module_id_int_t mod_id, unsigned char* questio
 		i2c_master_int_write_data(mod->id, NULL, 0);		//only sent the ADDR | R byte
 		mod->to_be_written[0] = (mod->slave_address << 1) | 1u;
 	}
+
 	mod->to_be_read_length = amount_of_bytes;
 	mod->last_byte_read = false;
 }
 
 int i2c_master_int_get_new_data_length(i2c_module_id_int_t mod_id){
-	i2c_module_int_t* mod = &i2cm_mods[mod_id];
-	return q_length(&(mod->buffer))-1;
+	return q_length(&(i2cm_mods[mod_id].buffer))-1;		//the first element of the buffer is the dummy read and should be ignored!!
 }
 
 void i2c_master_int_get_new_data(i2c_module_id_int_t mod_id, unsigned char* read_data, int amount_of_bytes){
@@ -252,7 +252,8 @@ static void read_byte(i2c_module_id_int_t mod_id){
 static void write_byte(i2c_module_id_int_t mod_id){
 	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
-	i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);
+	i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);		//sends the byte of data to the bus
+	//updates both amount of written bytes and the last byte transmitted status
 	mod->last_byte_transmitted = ( (++mod->written_bytes) >= mod->to_be_written_length );
 }
 
