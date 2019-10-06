@@ -19,18 +19,17 @@
 
 // Documented with Doxygen
 
-//TODO: Check compiler's bitfield implementation.
-
 #ifndef CAN_MCP25625_MCP25625_DRIVER_H_
 #define CAN_MCP25625_MCP25625_DRIVER_H_
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <board.h>
 
-
-
-
+#ifndef MCP25625_INTREQ_PIN
+#error MCP25625 Driver: must define MCP25625_INTREQ_PIN in "board.h" !
+#endif
 
 /*******************************************************************************
  *******************************************************************************
@@ -1264,10 +1263,17 @@ typedef struct	//Using union for uniform code
 typedef struct	//Using union for uniform code
 {
 	mcp25625_accfltr_id_t filter_match		:3;		///< @brief Filter Match
-	mcp25625_msg_type_t msg_type			:3;		///< @brief Msg Type Received
-	mcp25625_rec_msg_info_t msg_info		:3;		///< @brief Received Message Buffer
+	mcp25625_msg_type_t msg_type			:2;		///< @brief Msg Type Received
+	uint8_t									:1;		///< @brief Not used.
+	mcp25625_rec_msg_info_t msg_info		:2;		///< @brief Received Message Buffer
 }mcp25625_rx_status_t __attribute__((__aligned__(1)));;
 
+/*******************************************************************************
+ *******************************************************************************
+                        			CALLBACK
+ *******************************************************************************
+ ******************************************************************************/
+typedef void (*mcp25625_driver_callback_t)(void);
 
 /*******************************************************************************
  *******************************************************************************
@@ -1276,6 +1282,11 @@ typedef struct	//Using union for uniform code
  ******************************************************************************/
 
 //Low Level functions
+
+/**
+ * @brief Initialize driver
+ */
+void mcp25625_driver_init(void);
 
 /**
  * @brief Sends reset command
@@ -1380,5 +1391,19 @@ mcp25625_status_t mcp25625_read_status(void);
  * @return Struct with RX Status.
  */
 mcp25625_rx_status_t mcp25625_read_rx_status(void);
+
+/**
+ * @brief Set mcp25625 set driver interrupt callback.
+ * @details callback to be executed when mcp25625 interrupt pin changes state.
+ * Reset value: *NULL*
+ * @param callback callback to execute. Can be *NULL*.
+ */
+void mcp25625_driver_set_callback(mcp25625_driver_callback_t callback);
+
+/**
+ * @brief get IRQ Flag
+ * @param true if interrupt requested.
+ */
+bool mcp25625_get_IRQ_flag(void);
 
 #endif /* CAN_MCP25625_MCP25625_DRIVER_H_ */

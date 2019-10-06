@@ -7,10 +7,11 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "board.h"
-#include "general.h"
-#include "I2C/i2c_master_int.h"
-#include "Accelerometer/accelerometer.h"
+#include <CAN/CAN.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <SPI/spi_driver.h>
+#include <CAN/CAN.h>
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -18,7 +19,7 @@
 /******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
-
+static void delayLoop(uint32_t veces);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -26,23 +27,30 @@
  ******************************************************************************/
 
 /* Función que se llama una vez, al comienzo del programa */
-
-bool init = true;
+int i;
 void App_Init (void)
 {
+	CAN_init(0,0);
+	//DO INIT
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	if(init){
-		accel_init();
-		init = false;
+	can_message_t message,rec_message;
+	message.fir.dlc = 1;
+	message.fir.frame_type = CAN_STANDARD_FRAME;
+	message.fir.rtr = false;
+	message.message_id = 0;
+	message.data[0] = 0xFF;
+	while(true)
+	{
+		CAN_send(&message);
+		CAN_send(&message);
+		CAN_get(&rec_message);
+		CAN_get(&rec_message);
 	}
-	while(1);
-	//DO LOOP
 }
-
 
 /*******************************************************************************
  *******************************************************************************

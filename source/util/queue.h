@@ -24,22 +24,22 @@ typedef struct {
 	volatile uint32_t len;				//Keeps track of queue length
 	volatile uint32_t in;					//Offset for adding next data
 	volatile uint32_t out;				//Offset for reading next data
-} queue_t;
+} msg_queue_t;
 
 
-void q_init(queue_t * q);
+void q_init(msg_queue_t * q);
 
 //Wait for data. Can only be used by main loop.
-uint8_t q_read_blocking(queue_t * q);
+uint8_t q_read_blocking(msg_queue_t * q);
 //Flush queue. Can only be used by main loop.
-void q_flush(queue_t * q);
+void q_flush(msg_queue_t * q);
 //Add data to queue. True if event queue was not full
-bool q_pushback(queue_t * q, uint8_t data);
-bool q_pushfront(queue_t * q, uint8_t data);
+bool q_pushback(msg_queue_t * q, uint8_t data);
+bool q_pushfront(msg_queue_t * q, uint8_t data);
 
 //Get current queue length.
-uint8_t q_popfront(queue_t * q); // will return 0 if queue empty, but also if data is 0. check length first!
-unsigned int q_length(queue_t * q);
-bool q_isfull(queue_t * q);
+uint8_t q_popfront(msg_queue_t * q); // will return 0 if queue empty, but also if data is 0. check length first!
+unsigned int q_length(msg_queue_t * q);
+bool q_isfull(msg_queue_t * q);
 
 #endif /* _QUEUE_H_ */

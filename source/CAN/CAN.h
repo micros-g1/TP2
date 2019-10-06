@@ -44,7 +44,7 @@ typedef struct
 typedef struct
 {
 	can_fir_t fir;				///< @brief CAN Frame Register
-	uint8_t message_id;			///< @brief CAN Message id
+	uint32_t message_id;			///< @brief CAN Message id
 	uint8_t data[8];			///< @brief data. data length: fir.dlc . Not used if fir.rtr .
 }can_message_t;
 
@@ -54,8 +54,17 @@ typedef void (*CAN_rx_buffer_overflow_callback_t)(void);	///< @brief CAN RX Buff
 /**
  * @brief CAN Initialization
  * @details Initializes CAN
+ * @param id_mask mask for CAN id filter
+ * @param id_filter filter data for CAN id filter
  */
-void CAN_init();
+void CAN_init(uint32_t id_mask, uint32_t id_filter);
+
+/**
+ * @brief CAN change filter config
+ * @param id_mask mask for CAN id filter
+ * @param id_filter filter data for CAN id filter
+ */
+void CAN_change_filter_config(uint32_t id_mask, uint32_t id_filter);
 
 /**
  * @brief CAN Message available
@@ -77,21 +86,5 @@ bool CAN_send(const can_message_t *p_message);
  * @return *false* if no message available, without modifying contents of p_message.
  */
 bool CAN_get(can_message_t *p_frame);
-
-/**
- * @brief CAN Set RX Buffer Overflow callback
- * @details Sets a callback for buffer overflow.
- * @param callback Callback, *NULL* for no callback.
- */
-void CAN_set_rx_buffer_overflow_callback(CAN_rx_buffer_overflow_callback_t callback);
-/**
- * @brief CAN Set RX Buffer Overflow callback
- * @details Sets a callback for buffer overflow\n
- * If a callback is assigned, message will be removed from RX buffer as soon as callback is called.
- * If no callback, message will be kept in buffer until *CAN_get* is used.
- * @param callback Callback, *NULL* for no callback.
- */
-void CAN_set_message_callback(CAN_message_callback_t callback);
-
 
 #endif /* CAN_MCP25625_CAN_H_ */

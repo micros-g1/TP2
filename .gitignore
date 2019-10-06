@@ -3,3 +3,10 @@
 /.settings
 /Doxygen/*
 !/Doxygen/Doxyfile.ini
+*.launch
+/.idea/
+/cmake-build-debug/
+/CMakeLists.txt
+.metadata/
+source/.idea/
+source/main.c

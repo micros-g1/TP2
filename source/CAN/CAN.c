@@ -18,8 +18,6 @@
 #define PHSEG1_QUANTA 1u
 #define PHSEG2_QUANTA 2u
 
-#define ID_MASK ~0x07	//3 lsb can take any value.
-#define ID_FILTER 0		//Combined with ID_MASK, all bits except the first 3 bits must be zero.
 #define DATA_MASK	0	//Do not apply filter to data
 #define DATA_FILTER	0	//Don't care.
 
@@ -27,12 +25,11 @@
 //Then K = 8us * 16MHz / 8 = 16 => BRP<5:0> = K/2-1 = 7
 #define BRP_VALUE 7
 
-//Was last message rolled over?
-static bool rolled_over;
+//Operation mode to set after restart and init
+#define DEFAULT_OP_MODE LOOPBACK_MODE
 
-//Callbacks (for user)
-static CAN_rx_buffer_overflow_callback_t callback_overflow;
-static CAN_message_callback_t callback_message;
+//roll-over flag
+static bool rolled_over = false;
 
 //Callback (for interrupts)
 static void can_controller_isr(void);
@@ -50,24 +47,27 @@ static void convert_can_message_to_raw(const can_message_t *p_can_message, mcp25
 // and, in this case, data_filter_mask is ignored.
 static mcp25625_id_t generate_filter_mask_id(uint32_t id_filter_mask, uint16_t data_filter_mask, can_frame_t target_frames);
 
-void CAN_init()
+void CAN_init(uint32_t id_mask, uint32_t id_filter)
 {
 	static bool init = false;
 	if(init)
 		return;
 	init = true;
-	callback_message = NULL;
-	callback_overflow = NULL;
+	//Init Driver
+	mcp25625_driver_init();
 	//Reset
 	mcp25625_reset();
+	//Now, configure driver callback
+	mcp25625_driver_set_callback(can_controller_isr);
 	//Configure Timing (and set BLTMODE so that value of PHSEG2 is set by PHSEG2 bits in CNF3)
 	mcp25625_bit_modify(CNF1_ADDR, BRP, BRP_VALUE<<BRP_POS);
 	mcp25625_bit_modify(CNF2_ADDR, BLTMODE | PHSEG1 | PRSEG, BLTMODE | (PHSEG1_QUANTA-1)<<PHSEG1_POS | (PROPSEG_QUANTA-1)<<PRSEG_POS);
 	mcp25625_bit_modify(CNF3_ADDR, PHSEG2, (PHSEG2_QUANTA-1) << PHSEG2_POS);
 	//Set reception filters and masks
-	mcp25625_id_t filter = generate_filter_mask_id(ID_FILTER,DATA_FILTER,CAN_STANDARD_FRAME);
-	mcp25625_id_t mask = generate_filter_mask_id(ID_MASK,DATA_MASK,CAN_STANDARD_FRAME);
-	//Write all masks and filters
+	mcp25625_id_t filter = generate_filter_mask_id(id_filter,DATA_FILTER,CAN_STANDARD_FRAME);
+	mcp25625_id_t mask = generate_filter_mask_id(id_mask,DATA_MASK,CAN_STANDARD_FRAME);
+	//Write all masks and filters. Same filter and mask for both input buffers
+	//RXB0 has higher priority. Therefore, RXB1 will not be used.
 	mcp25625_write(RXF0_ADDR, sizeof(filter), (uint8_t*) &filter);
 	mcp25625_write(RXF1_ADDR, sizeof(filter), (uint8_t*) &filter);
 	mcp25625_write(RXF2_ADDR, sizeof(filter), (uint8_t*) &filter);
@@ -76,21 +76,38 @@ void CAN_init()
 	mcp25625_write(RXF5_ADDR, sizeof(filter), (uint8_t*) &filter);
 	mcp25625_write(RXM0_ADDR, sizeof(mask), (uint8_t*) &mask);
 	mcp25625_write(RXM1_ADDR, sizeof(mask), (uint8_t*) &mask);
-	//Set reception mode to "receive valid messages", and enable roll over
+	//Set reception mode to "receive valid messages", enable roll-over
 	mcp25625_write_register(RXB0_ADDR+CTRL_OFFSET, RECEIVE_VALID_MESSAGES << RXM_POS | BUKT);
 	mcp25625_write_register(RXB1_ADDR+CTRL_OFFSET, RECEIVE_VALID_MESSAGES << RXM_POS);
 	rolled_over = false;
 	//Clear CANINTF Flags
 	mcp25625_write_register(CANINTF_ADDR, 0);
-	//Configure interrupt pin
-	//TODO: Configure interrupt and callback
-	//Enable interrupts in MCP25625
-	mcp25625_write_register(CANINTE_ADDR, ERRIE | RX0IE | RX1IE);
-	//Set to normal operation, and disable clock, which is not needed.
-	//TODO: Change to NORMAL_OPERATION after testing, loopback mode for testing.
-	mcp25625_bit_modify(CANCTRL_ADDR, REQOP | CLKEN, LOOPBACK_MODE << REQOP_POS | 0 << CLKEN_POS);
-	//While until normal operation mode is set.
-	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != LOOPBACK_MODE);
+	//Enable interrupts, MCP25625. Interrupts: Freed transmit buffer, full receive buffer, error.
+	mcp25625_write_register(CANINTE_ADDR, ERRIE | TX2IE | TX1IE | TX0IE | RX0IE | RX1IE);
+	//Set to default operation mode, and disable clock, which is not needed.
+	mcp25625_bit_modify(CANCTRL_ADDR, REQOP | CLKEN, DEFAULT_OP_MODE << REQOP_POS | 0 << CLKEN_POS);
+	//While until operation mode is set.
+	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != DEFAULT_OP_MODE);
+}
+
+void CAN_change_filter_config(uint32_t id_mask, uint32_t id_filter)
+{
+	mcp25625_bit_modify(CANCTRL_ADDR, REQOP, CONFIG_MODE << REQOP_POS);
+	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != CONFIG_MODE);
+	mcp25625_id_t filter = generate_filter_mask_id(id_filter,DATA_FILTER,CAN_STANDARD_FRAME);
+	mcp25625_id_t mask = generate_filter_mask_id(id_mask,DATA_MASK,CAN_STANDARD_FRAME);
+	//Write all masks and filters. Same filter and mask for both input buffers
+	//RXB0 has higher priority. Therefore, RXB1 will not be used.
+	mcp25625_write(RXF0_ADDR, sizeof(filter), (uint8_t*) &filter);
+	mcp25625_write(RXF1_ADDR, sizeof(filter), (uint8_t*) &filter);
+	mcp25625_write(RXF2_ADDR, sizeof(filter), (uint8_t*) &filter);
+	mcp25625_write(RXF3_ADDR, sizeof(filter), (uint8_t*) &filter);
+	mcp25625_write(RXF4_ADDR, sizeof(filter), (uint8_t*) &filter);
+	mcp25625_write(RXF5_ADDR, sizeof(filter), (uint8_t*) &filter);
+	mcp25625_write(RXM0_ADDR, sizeof(mask), (uint8_t*) &mask);
+	mcp25625_write(RXM1_ADDR, sizeof(mask), (uint8_t*) &mask);
+	mcp25625_bit_modify(CANCTRL_ADDR, REQOP, DEFAULT_OP_MODE << REQOP_POS);
+	while(((mcp25625_canstat_t) mcp25625_read_register(CANSTAT_ADDR)).opmode != DEFAULT_OP_MODE);
 }
 
 bool CAN_message_available()
@@ -100,23 +117,23 @@ bool CAN_message_available()
 
 bool CAN_send(const can_message_t *p_message)
 {
-	mcp25625_status_t rx_status = mcp25625_read_status();
+	mcp25625_status_t status = mcp25625_read_status();
 	mcp25625_txb_rts_flag_t rts_flag = 0;
 	mcp25625_txb_id_t txb_to_write = TXB0;
 	bool tx_buffer_free = false;
-	if(!rx_status.txreq0)
+	if(!status.txreq0)
 	{
 		rts_flag = TXB0_RTS;
 		txb_to_write = TXB0;
 		tx_buffer_free = true;
 	}
-	else if(!rx_status.txreq1)
+	else if(!status.txreq1)
 	{
 		rts_flag = TXB1_RTS;
 		txb_to_write = TXB1;
 		tx_buffer_free = true;
 	}
-	else if(!rx_status.txreq2)
+	else if(!status.txreq2)
 	{
 		rts_flag = TXB2_RTS;
 		txb_to_write = TXB2;
@@ -179,19 +196,6 @@ bool CAN_get(can_message_t *p_message)
 	return message_available;
 }
 
-
-void CAN_set_rx_buffer_overflow_callback(CAN_rx_buffer_overflow_callback_t callback)
-{
-	callback_overflow = callback;
-}
-
-
-void CAN_set_message_callback(CAN_message_callback_t callback)
-{
-	callback_message = callback;
-}
-
-
 static void convert_raw_to_can_message(const mcp25625_id_data_t *p_raw_package, can_message_t *p_can_message)
 {
 	if(p_raw_package->id.sidl.ide)
@@ -228,6 +232,7 @@ static void convert_raw_to_can_message(const mcp25625_id_data_t *p_raw_package, 
 
 void convert_can_message_to_raw(const can_message_t *p_can_message, mcp25625_id_data_t *p_raw_package)
 {
+	p_raw_package->id.sidl.ide = p_can_message->fir.frame_type == CAN_EXTENDED_FRAME;
 	switch(p_can_message->fir.frame_type)
 	{
 		case CAN_STANDARD_FRAME:
@@ -242,7 +247,7 @@ void convert_can_message_to_raw(const can_message_t *p_can_message, mcp25625_id_
 			break;
 	}
 	//id.sidl.ssr is not valid for transmission
-	//But it is set here so that it is possible to convert messages to raw and back to can message
+	//But it is set here so that it is possible to convert messages to raw and back to CAN message
 	//or to can message and back to raw.
 	//Transmission will ignore this bit.
 	p_raw_package->id.sidl.ssr = p_can_message->fir.rtr;
@@ -287,28 +292,5 @@ mcp25625_id_t generate_filter_mask_id(uint32_t id_filter_mask, uint16_t data_fil
 
 static void can_controller_isr(void)
 {
-	//Get flags
-	mcp25625_canintf_t canintf = (mcp25625_canintf_t) mcp25625_read_register(CANINTF_ADDR);
-	if(canintf.errif)
-	{
-		mcp25625_eflg_t eflg = (mcp25625_eflg_t) mcp25625_read_register(EFLG_ADDR);
-		//Free flag so that further interrupts can be attended separatedly
-		if(eflg.rx1ovr)
-		{
-			mcp25625_bit_modify(EFLG_ADDR, RX1OVR, 0);
-			mcp25625_bit_modify(CANINTF_ADDR, RX1OVR, 0);
-			if(callback_overflow != NULL)
-				callback_overflow();
-		}
-	}
-	if(canintf.rx1if)
-	{
-		mcp25625_bit_modify(CANINTF_ADDR, RX1IF, 0);
-		if(callback_message != NULL)
-		{
-			can_message_t can_message;
-			if(CAN_get(&can_message))	//Should always be true
-				callback_message(&can_message);
-		}
-	}
+	//DEBUG
 }

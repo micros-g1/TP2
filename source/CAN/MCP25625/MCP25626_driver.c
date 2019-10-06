@@ -6,19 +6,21 @@
  */
 #include <CAN/MCP25625/MCP25625_driver.h>
 #include <string.h>
-//#include<SPI/SPI.h>
+#include <SPI/spi_driver.h>
+#include <gpio.h>
+#include <hardware.h>
+#include <Interrupts/interrupts.h>
 
-//TODO: Remove temp code.
-//This function represents an spi function to be implemented in the future
-#define DEBUG_LENGTH 1024
-static int i_deb = 0;
-static uint8_t a_deb[DEBUG_LENGTH];
-void spi_transaction(void *p_in, void *p_out, size_t length)
-{if (i_deb+length+1>DEBUG_LENGTH) while(1); a_deb[i_deb++] = length ; memcpy(a_deb+i_deb,p_in,length) ; i_deb+= length;}
-
-#define TEMP_ARRAY_BUFFER_LENGTH 128+2	//All memory + 1 read / write instruction + address worst case.
 //Array used for spi transactions.
+//Size: Memory size + 1 read / write instruction + address worst case.
+#define TEMP_ARRAY_BUFFER_LENGTH 128+2
 static uint8_t temp_array[TEMP_ARRAY_BUFFER_LENGTH];
+//Global flag to indicate if mcp25625 interrupt handling is enabled.
+static bool interrupts_enabled = false;
+//Local function for enabling / disabling interrupt handling.
+static void mcp25625_driver_enable_interrupt_handling(bool enable);
+//Interrupt handling will be disabled while on spi transfer
+//This will allow spi commands during interrupts, if wanted.
 
 /**
  * @enum mcp25625_instruction_t
@@ -81,40 +83,93 @@ typedef enum
 	TXB2_DATA = 5
 }mcp25625_tx_load_locations_t;
 
+static void mcp25625_internal_isr(void);
+mcp25625_driver_callback_t callback_isr;
+
+static bool initialized = false;
+void mcp25625_driver_init()
+{
+	if(initialized)
+		return;
+	initialized = true;
+	//Set callback to null
+	mcp25625_driver_set_callback(NULL);
+	//Initialize interrupts
+	interrupts_init();
+	//Configure interrupt pin
+	gpioMode(MCP25625_INTREQ_PIN, INPUT);
+	gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_FALLING_EDGE, &mcp25625_internal_isr);
+	mcp25625_driver_enable_interrupt_handling(true);
+	//Configure SPI
+	spi_driver_init();
+	spi_set_clock_polarity(SPI_SCK_INACTIVE_LOW);
+	spi_set_clock_phase(SPI_CPHA_CAP_IN_LEAD_CHANGE_FOLLOWING);
+	spi_set_transfer_order(SPI_MSB_FIRST);
+	spi_set_baud_rate_scaler(0);
+	spi_set_baud_rate_prescaler(0x03);
+	spi_set_double_baud_rate(true);
+}
 
 void mcp25625_reset(void)
 {
+	if(!initialized)
+		return;
 	uint8_t instruction = MCP_RESET;
-	spi_transaction(&instruction, NULL, 1);
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
+	spi_master_transfer_blocking((uint8_t*)&instruction, NULL, 1);
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_write(mcp25625_addr_t addr, size_t length, const uint8_t *p_data)
 {
-	if(length > TEMP_ARRAY_BUFFER_LENGTH-1)
-		length = TEMP_ARRAY_BUFFER_LENGTH-1;	//Crop amount of data to write. Sorry.
-	temp_array[0] = MCP_WRITE;
-	temp_array[1] = addr;
-	memcpy(&temp_array[2], p_data, length);
-	spi_transaction(&temp_array,NULL,2+length);
+	if(!initialized)
+			return;
+	if(length <= TEMP_ARRAY_BUFFER_LENGTH-1)
+	{
+		bool int_bkp = interrupts_enabled;
+		if(interrupts_enabled)
+			mcp25625_driver_enable_interrupt_handling(false);
+		temp_array[0] = MCP_WRITE;
+		temp_array[1] = addr;
+		memcpy(&temp_array[2], p_data, length);
+		spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,2+length);
+		if(int_bkp)
+			mcp25625_driver_enable_interrupt_handling(int_bkp);
+	}
 }
 
 void mcp25625_read(mcp25625_addr_t addr, size_t length, uint8_t *p_data)
 {
-	if(length > TEMP_ARRAY_BUFFER_LENGTH-1)
-		length = TEMP_ARRAY_BUFFER_LENGTH-1;	//Crop amount of data to write. Sorry.
-	temp_array[0] = MCP_WRITE;
-	temp_array[1] = addr;
-	spi_transaction(&temp_array,&temp_array,2+length);
-	memcpy(p_data,&temp_array[2],length);
+	if(!initialized)
+			return;
+	if(length <= TEMP_ARRAY_BUFFER_LENGTH-1)
+	{
+		bool int_bkp = interrupts_enabled;
+		if(interrupts_enabled)
+			mcp25625_driver_enable_interrupt_handling(false);
+		temp_array[0] = MCP_READ;
+		temp_array[1] = addr;
+		spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,2+length);
+		memcpy(p_data,&temp_array[2],length);
+		if(int_bkp)
+			mcp25625_driver_enable_interrupt_handling(int_bkp);
+	}
 }
 
 void mcp25625_write_register(mcp25625_addr_t addr, uint8_t data)
 {
+	if(!initialized)
+			return;
 	mcp25625_write(addr, 1, &data);
 }
 
 uint8_t mcp25625_read_register(mcp25625_addr_t addr)
 {
+	if(!initialized)
+			return 0x00;
 	uint8_t data;
 	mcp25625_read(addr, 1, &data);
 	return data;
@@ -122,15 +177,24 @@ uint8_t mcp25625_read_register(mcp25625_addr_t addr)
 
 void mcp25625_bit_modify(mcp25625_addr_t addr, uint8_t mask, uint8_t data)
 {
+	if(!initialized)
+			return;
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_BIT_MODIFY;
 	temp_array[1] = addr;
 	temp_array[2] = mask;
 	temp_array[3] = data;
-	spi_transaction(&temp_array,NULL,4);
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,4);
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_read_rx_buffer_id(mcp25625_rxb_id_t buffer_id, mcp25625_id_t *p_id)
 {
+	if(!initialized)
+			return;
 	mcp25625_rx_read_locations_t location;
 	switch(buffer_id)
 	{
@@ -141,13 +205,20 @@ void mcp25625_read_rx_buffer_id(mcp25625_rxb_id_t buffer_id, mcp25625_id_t *p_id
 			location = RXB1_ID;
 			break;
 	}
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_id));
-	memcpy(&temp_array[1], p_id, sizeof(*p_id));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(*p_id));
+	memcpy(p_id, &temp_array[1], sizeof(*p_id));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_load_tx_buffer_id(mcp25625_txb_id_t buffer_id, const mcp25625_id_t *p_id)
 {
+	if(!initialized)
+			return;
 	mcp25625_rx_read_locations_t location;
 	switch(buffer_id)
 	{
@@ -161,13 +232,20 @@ void mcp25625_load_tx_buffer_id(mcp25625_txb_id_t buffer_id, const mcp25625_id_t
 			location = TXB2_ID;
 			break;
 	}
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
 	memcpy(&temp_array[1], p_id, sizeof(*p_id));
-	spi_transaction(&temp_array,NULL,1+sizeof(*p_id));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,1+sizeof(*p_id));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_read_rx_buffer_data(mcp25625_rxb_id_t buffer_id, mcp25625_data_t *p_data)
 {
+	if(!initialized)
+			return;
 	mcp25625_rx_read_locations_t location;
 	switch(buffer_id)
 	{
@@ -178,13 +256,20 @@ void mcp25625_read_rx_buffer_data(mcp25625_rxb_id_t buffer_id, mcp25625_data_t *
 			location = RXB1_DATA;;
 			break;
 	}
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_data));
-	memcpy(&temp_array[1], p_data, sizeof(*p_data));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(*p_data));
+	memcpy(p_data, &temp_array[1], sizeof(*p_data));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_load_tx_buffer_data(mcp25625_txb_id_t buffer_id, const mcp25625_data_t *p_data)
 {
+	if(!initialized)
+			return;
 	mcp25625_rx_read_locations_t location;
 	switch(buffer_id)
 	{
@@ -198,13 +283,20 @@ void mcp25625_load_tx_buffer_data(mcp25625_txb_id_t buffer_id, const mcp25625_da
 			location = TXB2_DATA;
 			break;
 	}
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
 	memcpy(&temp_array[1], p_data, sizeof(*p_data));
-	spi_transaction(&temp_array,NULL,1+sizeof(*p_data));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,1+sizeof(*p_data));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_read_rx_buffer_id_data(mcp25625_rxb_id_t buffer_id, mcp25625_id_data_t *p_id_data)
 {
+	if(!initialized)
+			return;
 	mcp25625_rx_read_locations_t location;
 	switch(buffer_id)
 	{
@@ -215,14 +307,21 @@ void mcp25625_read_rx_buffer_id_data(mcp25625_rxb_id_t buffer_id, mcp25625_id_da
 			location = RXB1_ID;
 			break;
 	}
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_READ_RX_BUFFER + location;
-	//Can't know beforehand how many bytes we need. grab them all.
-	spi_transaction(&temp_array,&temp_array,1+sizeof(*p_id_data));
-	memcpy(&temp_array[1], p_id_data, sizeof(*p_id_data));
+	//we can't know beforehand how many bytes we need. grab them all.
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(*p_id_data));
+	memcpy(p_id_data, &temp_array[1], sizeof(*p_id_data));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_load_tx_buffer_id_data(mcp25625_txb_id_t buffer_id, const mcp25625_id_data_t *p_id_data)
 {
+	if(!initialized)
+			return;
 	mcp25625_rx_read_locations_t location;
 	switch(buffer_id)
 	{
@@ -236,36 +335,112 @@ void mcp25625_load_tx_buffer_id_data(mcp25625_txb_id_t buffer_id, const mcp25625
 			location = TXB2_ID;
 			break;
 	}
-	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
 	//No need to transfer all bytes. Read frame info
 	//and determine how many bytes are needed.
 	size_t bytes_to_transfer = p_id_data->dlc.rtr? 0 : p_id_data->dlc.dlc;
-	bytes_to_transfer >= 8? 8 : bytes_to_transfer;
-	bytes_to_transfer += sizeof(mcp25625_id_t);
+	bytes_to_transfer = bytes_to_transfer >= 8? 8 : bytes_to_transfer;
+	bytes_to_transfer += sizeof(mcp25625_id_t) + 1;
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
+	temp_array[0] = MCP_LOAD_TX_BUFFER + location;
 	memcpy(&temp_array[1], p_id_data, bytes_to_transfer);
-	spi_transaction(&temp_array,NULL,1+bytes_to_transfer);
+	spi_master_transfer_blocking((uint8_t*)&temp_array,NULL,1+bytes_to_transfer);
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 void mcp25625_tx_request_to_send(mcp25625_txb_rts_flag_t tx_rts_flags)
 {
+	if(!initialized)
+			return;
 	uint8_t instruction = MCP_RTS + tx_rts_flags;
-	spi_transaction(&instruction, NULL, 1);
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
+	spi_master_transfer_blocking(&instruction, NULL, 1);
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 }
 
 mcp25625_status_t mcp25625_read_status(void)
 {
 	mcp25625_status_t status;
+	if(!initialized)
+	{
+		status.rx0if = 0;
+		status.rx1if = 0;
+		status.tx0if = 0;
+		status.tx1if = 0;
+		status.tx2if = 0;
+		status.txreq0 = 0;
+		status.txreq1 = 0;
+		status.txreq2 = 0;
+		return status;
+	}
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
 	temp_array[0] = MCP_READ_STATUS;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(status));
-	memcpy(&temp_array[2], &status, sizeof(status));
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(status));
+	memcpy(&status, &temp_array[1], sizeof(status));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 	return status;
 }
 
 mcp25625_rx_status_t mcp25625_read_rx_status(void)
 {
 	mcp25625_rx_status_t rx_status;
-	temp_array[0] = MCP_READ_STATUS;
-	spi_transaction(&temp_array,&temp_array,1+sizeof(rx_status));
-	memcpy(&temp_array[2], &rx_status, sizeof(rx_status));
+	if(!initialized)
+	{
+		rx_status.filter_match = 0;
+		rx_status.msg_info = 0;
+		rx_status.msg_type = 0;
+		return rx_status;
+	};
+	bool int_bkp = interrupts_enabled;
+	if(interrupts_enabled)
+		mcp25625_driver_enable_interrupt_handling(false);
+	temp_array[0] = MCP_RX_STATUS;
+	spi_master_transfer_blocking((uint8_t*)&temp_array,(uint8_t*)&temp_array,1+sizeof(rx_status));
+	memcpy(&rx_status, &temp_array[1], sizeof(rx_status));
+	if(int_bkp)
+		mcp25625_driver_enable_interrupt_handling(int_bkp);
 	return rx_status;
+}
+
+void mcp25625_driver_enable_interrupt_handling(bool enabled)
+{
+	if(!initialized)
+		return;
+	return;
+	//Interrupt flag is not cleared!
+	//Interrupts will be postponed if they happen while disabled.
+	if(enabled)
+		gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_BOTH_EDGES, &mcp25625_internal_isr);
+	else
+		gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_DISABLE, NULL);
+	interrupts_enabled = enabled;
+}
+
+void mcp25625_driver_set_callback(mcp25625_driver_callback_t callback)
+{
+	//Set callback
+	callback_isr = callback;
+}
+
+bool mcp25625_get_IRQ_flag(void)
+{
+	if(!initialized)
+		return false;
+	return !gpioRead(MCP25625_INTREQ_PIN);
+}
+
+void mcp25625_internal_isr()
+{
+	//Interrupt flag cleared by gpio.
+	if(callback_isr != NULL)
+		//Execute callback if callback given
+		callback_isr();
 }
