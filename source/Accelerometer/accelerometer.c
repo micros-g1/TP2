@@ -62,9 +62,9 @@ void accel_init(){
 
 	systick_init();
 
-	while(start() != I2C_ERROR);
-	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
-	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
+	while(start() == I2C_ERROR);
+//	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
+//	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
 
 	initialized = true;
 
@@ -106,6 +106,11 @@ static accel_errors_t start(){
 	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
 	write_reg(ACCEL_CTRL_REG1, 0x0D);
 
+	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
+
+	handling_reading_calls();
+	handling_reading();
+
 	return I2C_OK;
 }
 
@@ -131,14 +136,14 @@ static void handling_reading(){
 		i2c_master_int_get_new_data(I2C0_INT_MOD, reading_buffer, ACCEL_DATA_PACK_LEN);
 
 		//accelerometer data : serial... 14 bits
-		last_read_data_acc.x = (int16_t)((reading_buffer[1] << 8) | reading_buffer[2])>> 2;
-		last_read_data_acc.y = (int16_t)((reading_buffer[3] << 8) | reading_buffer[4])>> 2;
-		last_read_data_acc.z = (int16_t)((reading_buffer[5] << 8) | reading_buffer[6])>> 2;
+		last_read_data_acc.x = (int16_t)((reading_buffer[0] << 8) | reading_buffer[1])>> 2;
+		last_read_data_acc.y = (int16_t)((reading_buffer[2] << 8) | reading_buffer[3])>> 2;
+		last_read_data_acc.z = (int16_t)((reading_buffer[4] << 8) | reading_buffer[5])>> 2;
 
 		//magnetometer data : serial... 16 bits
-		last_read_data_acc.x = (reading_buffer[7] << 8) | reading_buffer[8];
-		last_read_data_acc.y = (reading_buffer[9] << 8) | reading_buffer[10];
-		last_read_data_acc.z = (reading_buffer[11] << 8) | reading_buffer[12];
+		last_read_data_acc.x = (reading_buffer[6] << 8) | reading_buffer[7];
+		last_read_data_acc.y = (reading_buffer[8] << 8) | reading_buffer[9];
+		last_read_data_acc.z = (reading_buffer[10] << 8) | reading_buffer[11];
 	}
 }
 
@@ -156,10 +161,14 @@ static void write_reg(unsigned char reg, unsigned char data){
 accel_raw_data_t accel_get_last_data(accel_data_options_t data_option){
 	accel_raw_data_t returnable;
 
+	systick_disable_callback(handling_reading);		//cant update data while reading it!
+
 	if(data_option == ACCEL_ACCEL_DATA)
 		returnable = last_read_data_acc;
 	else if(data_option == ACCEL_MAGNET_DATA)
 		returnable = last_read_data_mag;
+
+	systick_enable_callback(handling_reading);		//can now update data if necessary
 
 	return returnable;
 }
