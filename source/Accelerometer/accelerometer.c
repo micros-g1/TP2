@@ -13,7 +13,7 @@
 #include "util/SysTick.h"
 
 #define ACCEL_ADDRESS	0x1D
-#define ACCEL_DATA_PACK_LEN	7
+#define ACCEL_DATA_PACK_LEN	13
 
 
 // ACCEL I2C address
@@ -38,7 +38,10 @@ typedef enum { I2C_ERROR, I2C_OK} accel_errors_t;
  * as shown in Table 5. By default, the I2C address is 0x1D.
 */
 
-static accel_raw_data_t last_read_data;
+static unsigned char reading_buffer[ACCEL_DATA_PACK_LEN];
+static accel_raw_data_t last_read_data_mag;
+static accel_raw_data_t last_read_data_acc;
+
 static void pin_config();
 static void handling_reading();
 static void handling_reading_calls();
@@ -46,7 +49,6 @@ static void write_reg(unsigned char reg, unsigned char data);
 
 
 static accel_errors_t start();
-static accel_errors_t config_ok;
 
 void accel_init(){
 	bool initialized = false;
@@ -59,11 +61,10 @@ void accel_init(){
 	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
 
 	systick_init();
-	config_ok = I2C_ERROR;
 
 	while(start() != I2C_ERROR);
-//	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
-//	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
+	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
+	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
 
 	initialized = true;
 
@@ -126,12 +127,25 @@ static void pin_config(int pin){
 
 static void handling_reading(){
 	//reads the last ACC_DATA_PACK_LEN (exactly!!) amount of bytes from the i2c master buffer.
-	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN))
-			i2c_master_int_get_new_data(I2C0_INT_MOD, (unsigned char*) &last_read_data, ACCEL_DATA_PACK_LEN);
+	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN)){
+		i2c_master_int_get_new_data(I2C0_INT_MOD, reading_buffer, ACCEL_DATA_PACK_LEN);
+
+		//accelerometer data : serial... 14 bits
+		last_read_data_acc.x = (int16_t)((reading_buffer[1] << 8) | reading_buffer[2])>> 2;
+		last_read_data_acc.y = (int16_t)((reading_buffer[3] << 8) | reading_buffer[4])>> 2;
+		last_read_data_acc.z = (int16_t)((reading_buffer[5] << 8) | reading_buffer[6])>> 2;
+
+		//magnetometer data : serial... 16 bits
+		last_read_data_acc.x = (reading_buffer[7] << 8) | reading_buffer[8];
+		last_read_data_acc.y = (reading_buffer[9] << 8) | reading_buffer[10];
+		last_read_data_acc.z = (reading_buffer[11] << 8) | reading_buffer[12];
+	}
 }
 
 static void handling_reading_calls(){
-	i2c_master_int_read_data(I2C0_INT_MOD, NULL, 0, ACCEL_DATA_PACK_LEN);
+	unsigned char read_addr = ACCEL_STATUS;
+	if(!i2c_master_int_bus_busy(I2C0_INT_MOD))
+		i2c_master_int_read_data(I2C0_INT_MOD, &read_addr, 1, ACCEL_DATA_PACK_LEN);
 }
 
 static void write_reg(unsigned char reg, unsigned char data){
@@ -140,6 +154,12 @@ static void write_reg(unsigned char reg, unsigned char data){
 }
 
 accel_raw_data_t accel_get_last_data(accel_data_options_t data_option){
-	accel_raw_data_t data;
-	return data;
+	accel_raw_data_t returnable;
+
+	if(data_option == ACCEL_ACCEL_DATA)
+		returnable = last_read_data_acc;
+	else if(data_option == ACCEL_MAGNET_DATA)
+		returnable = last_read_data_mag;
+
+	return returnable;
 }

@@ -14,9 +14,9 @@
 typedef enum {ACCEL_ACCEL_DATA, ACCEL_MAGNET_DATA} accel_data_options_t;
 
 typedef struct {
-	uint16_t x;
-	uint16_t y;
-	uint16_t z;
+	int x;
+	int y;
+	int z;
 } accel_raw_data_t;
 
 /**
