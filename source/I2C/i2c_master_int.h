@@ -25,53 +25,14 @@
  * @brief I2C interface modules
  */
 typedef enum {I2C0_INT_MOD, I2C1_INT_MOD, I2C2_INT_MOD, AMOUNT_I2C_INT_MOD} i2c_module_id_int_t;
-/**
- * @typedef struct i2c_module_t
- * @brief I2C interface module information
- * @details To be used internally by the interface.
- * The user should not change its values and should only use the struct as an argument for an interface function!!!
- */
-typedef struct{
-	i2c_module_id_int_t id;
-
-	int starf_log_count;
-
-	//tx mode
-	bool last_byte_transmitted;
-	unsigned char to_be_written[MAX_WRITE_CHARS];
-	unsigned char slave_address;		//bytes that will be written in the current write request
-
-	int to_be_written_length;			//amount of bytes to be written in the current write request
-	int written_bytes;
-
-	bool rs_sent;
-	//rx mode
-	bool last_byte_read;
-	bool second_2_last_byte_2_be_read;
-	queue_t buffer;
-
-	bool new_data;
-
-	int to_be_read_length;
-
-} i2c_module_int_t;
-
-
-typedef struct{
-
-}i2c_reading_request_int_t;
-
-typedef struct{
-
-} i2c_writing_request_int_t;
 
 /**
  * @brief I2C MASTER INIT
  * @details Initialize I2C master interface.
  * Has no effect when called twice with the same module (safe init)
- * @param mod : module to be initialized.
+ * @param mod_id : module to be initialized.
  */
-void i2c_master_int_init(i2c_module_id_int_t mod_id, i2c_module_int_t* mod);
+void i2c_master_int_init(i2c_module_id_int_t mod_id);
 
 /**
  * @brief I2C Master Read Data
@@ -83,7 +44,7 @@ void i2c_master_int_init(i2c_module_id_int_t mod_id, i2c_module_int_t* mod);
  * @param len_question : amount of bytes question has. If 0, then the writing package will not be sent.
  * @param amount_of_bytes : amount of bytes to be received when the reading is performed.
  */
-void i2c_master_int_read_data(i2c_module_int_t* mod, unsigned char* question, int len_question, int amount_of_bytes);
+void i2c_master_int_read_data(i2c_module_id_int_t mod_id, unsigned char* question, int len_question, int amount_of_bytes);
 
 /**
  * @brief I2C Master has new data
@@ -91,7 +52,7 @@ void i2c_master_int_read_data(i2c_module_int_t* mod, unsigned char* question, in
  * @param mod : I2C module to be asked if new data has been received.
  * @return *true* if new data has arrived to the buffer. *false* otherwise
  */
-bool i2c_master_int_has_new_data(i2c_module_int_t* mod);
+bool i2c_master_int_has_new_data(i2c_module_id_int_t mod_id);
 
 /**
  * @brief I2C Master get new data length
@@ -100,7 +61,7 @@ bool i2c_master_int_has_new_data(i2c_module_int_t* mod);
  * @param mod : I2C module to be asked the new data's length.
  * @return amount of bytes the new data has.
  */
-int i2c_master_int_get_new_data_length(i2c_module_int_t* mod);
+int i2c_master_int_get_new_data_length(i2c_module_id_int_t mod_id);
 
 
 /**
@@ -112,7 +73,7 @@ int i2c_master_int_get_new_data_length(i2c_module_int_t* mod);
  * @param amount_of_bytes : amount of bytes to read from buffer.
  * @return amount of bytes the new data has.
  */
-void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data, int amount_of_bytes);
+void i2c_master_int_get_new_data(i2c_module_id_int_t mod_id, unsigned char* read_data, int amount_of_bytes);
 
 /**
  * @brief I2C Master write data
@@ -121,9 +82,15 @@ void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data
  * @param write_data : data that will be sent to the slave.
  * @param amount_of_bytes : amount of bytes that will be sent to the slave.
  */
-void i2c_master_int_write_data(i2c_module_int_t* mod, unsigned char* write_data, int amount_of_bytes);
+void i2c_master_int_write_data(i2c_module_id_int_t mod_id, unsigned char* write_data, int amount_of_bytes);
 
-void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add);
+/**
+ * @brief I2C Master set slave address
+ * @details
+ * @param mod_id : I2C module which slave will be set.
+ */
+void i2c_master_int_set_slave_addr(i2c_module_id_int_t mod_id, unsigned char slave_add);
 
+bool i2c_master_int_bus_busy(i2c_module_id_int_t mod_id);
 
 #endif /* I2C_I2C_MASTER_INT_H_ */

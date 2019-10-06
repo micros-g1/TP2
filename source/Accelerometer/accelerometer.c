@@ -39,18 +39,13 @@ typedef enum { I2C_ERROR, I2C_OK} accel_errors_t;
 */
 
 static accel_raw_data_t last_read_data;
-static i2c_module_int_t i2c_module;
 static void pin_config();
 static void handling_reading();
 static void handling_reading_calls();
-static void handle_delay();
-static void write_reg_and_wait(unsigned char reg, unsigned char data, int reload);
+static void write_reg(unsigned char reg, unsigned char data);
 
-static void config_delay(int reload);
-static void wait_for(int reload);
 
 static accel_errors_t start();
-static bool delaying = false;
 static accel_errors_t config_ok;
 
 void accel_init(){
@@ -59,7 +54,7 @@ void accel_init(){
 
 	pin_config(ACCEL_SCL_PIN);
 	pin_config(ACCEL_SDA_PIN);
-	i2c_master_int_init(I2C0_INT_MOD, &i2c_module);
+	i2c_master_int_init(I2C0_INT_MOD);
 
 	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
 
@@ -80,33 +75,35 @@ static accel_errors_t start(){
 
 	unsigned char question = ACCEL_WHOAMI;
 
-	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
-	i2c_master_int_read_data(&i2c_module, &question, 1 , 1);
+	i2c_master_int_set_slave_addr(I2C0_INT_MOD, ACCEL_SLAVE_ADDR);
+	i2c_master_int_read_data(I2C0_INT_MOD, &question, 1 , 1);
 
 	unsigned char data[2] = {0, 0};
 
-	while(!i2c_master_int_has_new_data(&i2c_module));
+	while(!i2c_master_int_has_new_data(I2C0_INT_MOD));
 
-	if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
+	if (i2c_master_int_get_new_data_length(I2C0_INT_MOD) != 1)
 		return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
 	else {
-		i2c_master_int_get_new_data(&i2c_module, data, 1);
+		i2c_master_int_get_new_data(I2C0_INT_MOD, data, 1);
 		if(data[0] != ACCEL_WHOAMI_VAL)
 			return (I2C_ERROR);
 	}
 
-	write_reg_and_wait(ACCEL_M_CTRL_REG1, 0x00, 1000);
+	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
+	write_reg(ACCEL_M_CTRL_REG1, 0x00);
 
-	write_reg_and_wait(ACCEL_M_CTRL_REG1, 0x1F, 1000);
+	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
+	write_reg(ACCEL_M_CTRL_REG1, 0x1F);
 
-	write_reg_and_wait(ACCEL_M_CTRL_REG2, 0x20, 1000);
+	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
+	write_reg(ACCEL_M_CTRL_REG2, 0x20);
 
-	write_reg_and_wait(ACCEL_XYZ_DATA_CFG, 0x01, 1000);
+	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
+	write_reg(ACCEL_XYZ_DATA_CFG, 0x01);
 
-	write_reg_and_wait(ACCEL_CTRL_REG1, 0x0D, 1000);
-
-	systick_delete_callback(handle_delay);
-	delaying = false;
+	while(i2c_master_int_bus_busy(I2C0_INT_MOD));
+	write_reg(ACCEL_CTRL_REG1, 0x0D);
 
 	return I2C_OK;
 }
@@ -127,20 +124,6 @@ static void pin_config(int pin){
 }
 
 
-static void config_delay(int reload){
-	static bool first_config = true;
-	if(first_config){
-		systick_add_callback(handle_delay, reload, SINGLE_SHOT);			//more than 800 Hz!!!
-		first_config = false;
-	}
-	else
-		systick_enable_callback(handle_delay);
-	delaying = true;
-}
-
-static void handle_delay(){
-	delaying = false;
-}
 static void handling_reading(){
 	//reads the last ACC_DATA_PACK_LEN (exactly!!) amount of bytes from the i2c master buffer.
 	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN))
@@ -151,15 +134,9 @@ static void handling_reading_calls(){
 	i2c_master_int_read_data(I2C0_INT_MOD, NULL, 0, ACCEL_DATA_PACK_LEN);
 }
 
-static void write_reg_and_wait(unsigned char reg, unsigned char data, int reload){
+static void write_reg(unsigned char reg, unsigned char data){
 	unsigned char reg_data[2] = {reg, data};
-	i2c_master_int_write_data(&i2c_module, reg_data, 2);
-	wait_for(reload);
-}
-
-static void wait_for(int reload){
-	config_delay(reload);
-	while(!delaying);
+	i2c_master_int_write_data(I2C0_INT_MOD, reg_data, 2);
 }
 
 accel_raw_data_t accel_get_last_data(accel_data_options_t data_option){

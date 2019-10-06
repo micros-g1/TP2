@@ -13,7 +13,7 @@
 #define I2C_CLK_FREQ	50000000
 
 i2c_service_callback_t interruption_callback[AMOUNT_I2C_DR_MOD] = {NULL, NULL, NULL};
-static I2C_Type* i2c_dr_modules [AMOUNT_I2C_DR_MOD]= { I2C0, I2C1, I2C2 };
+static I2C_Type* const i2c_dr_modules [AMOUNT_I2C_DR_MOD]= { I2C0, I2C1, I2C2 };
 static void clock_gating_mod(i2c_modules_dr_t mod);
 
 void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
@@ -96,8 +96,8 @@ void i2c_dr_send_start_stop(i2c_modules_dr_t mod, bool start_stop){
 	 * Slave to Master when sending a start signal. */
 	unsigned char word = i2c_dr_modules[mod]->C1;
 	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)start_stop ^ word) & (1U << 5);
-//	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ start_stop) & (1U << 5);
 
+//	(i2c_dr_modules[mod]->C1) ^= (-(unsigned char)word ^ start_stop) & (1U << 5);
 }
 
 void i2c_dr_send_repeated_start(i2c_modules_dr_t mod){
@@ -126,13 +126,11 @@ bool i2c_dr_get_transfer_complete(i2c_modules_dr_t mod){
 	 */
 	return ((i2c_dr_modules[mod]->S) >> 7) & 1U;
 }
+bool i2c_dr_bus_busy(i2c_modules_dr_t mod){
+	return ((i2c_dr_modules[mod]->S) >> 5) & 1U;
+}
 
 /*IAAS : for slave, not necessary!!!*/
-
-bool i2c_dr_bus_is_busy(i2c_modules_dr_t mod){
-	//BUSY: 1 for bus busy. 0 for bus not busy
-	return (i2c_dr_modules[mod]->S) |= 0x10;
-}
 
 // ARBL -> ARBITRATION LOST. NOT NECESSARY BECAUSE THE TRANSMISSION WILL ONLY BE FROM MASTER (MCU) TO SLAVE(MAGNETOMETER), READ AND WRITE.
 //RAM -> RANGE ADDRESS MATCH.
