@@ -34,7 +34,7 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;
-	i2c_pos->SMB |= 1UL << 7;		//FACK to 1.
+//	i2c_pos->SMB |= 1UL << 7;		//FACK to 1.
 
 	i2c_pos->FLT |= I2C_FLT_SSIE_MASK;
 	uint32_t irq_interrupts[] = I2C_IRQS;//get the module interrupt
@@ -229,8 +229,10 @@ void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
 }
 
-
-
+void i2c_dr_set_fack(i2c_modules_dr_t mod, bool enabled){
+	unsigned char reg = ((I2C_Type*) I2C0_BASE)->SMB;
+	(i2c_dr_modules[mod]->SMB) ^= (-(unsigned char)enabled ^ reg) & (1UL << 7);
+}
 
 
 
