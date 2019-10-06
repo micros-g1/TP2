@@ -109,23 +109,23 @@ static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 	//the order of each call is important!!!
 	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
-	if(i2c_dr_get_stopf(mod_id)){
+	if(i2c_dr_get_stopf(mod_id)){			//bus detected stop
 		i2c_dr_clear_stopf(mod_id);
 		i2c_dr_clear_iicif(mod_id);
 		mod->starf_log_count = 0;
 	}
-	else if(i2c_dr_get_startf(mod_id)){
+	else if(i2c_dr_get_startf(mod_id)){		//bus detected start
 		i2c_dr_clear_startf(mod_id);
 		i2c_dr_clear_iicif(mod_id);
 
 		if( ( ++(mod->starf_log_count) ) == 1)
 			handle_master_mode(mod_id);
 		else if( (mod->starf_log_count)  >= 2){	// repeated start!
-			mod->rs_sent = true;
+			mod->rs_sent = true;				//lets the module know that a repeated start has been correctly sent.
 			handle_master_mode(mod_id);
 		}
 	}
-	else{
+	else{										//base case, no start or stop detection.
 		i2c_dr_clear_iicif(mod_id);
 		handle_master_mode(mod_id);
 	}
@@ -138,33 +138,42 @@ static void handle_master_mode(i2c_modules_dr_t mod_id){
 static void handle_tx_mode(i2c_module_id_int_t mod_id){
 	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
-	if( ((I2C0->S) >> 4) & 1U){					//DEBUG!!!
+	if( ((I2C0->S) >> 4) & 1U){					//FOR DEBUGGING ONLY!!!
 		send_start_stop(mod_id, false);
 	}
 
+	//last byte transmitted or a NACK received when only sending information (no reading action will be performed before sending stop)
 	if(( mod->last_byte_transmitted || i2c_dr_get_rxak(mod_id) ) && (mod->to_be_read_length == 0))
 		send_start_stop(mod_id, false);
+
+	/*last byte to be transmitted when a reading action will be performed is the address of the slave followed by a R bit.
+	  Before this address, a repeated start should be sent!		*/
 	else if( ( (mod->to_be_written_length - mod->written_bytes) == 1 ) && (mod->to_be_read_length > 0) ){
 		if(!mod->rs_sent)
-			i2c_dr_send_repeated_start(mod_id);
+			i2c_dr_send_repeated_start(mod_id);			//sends the repeated start before sending the ADDR | R byte
 		else
-			write_byte(mod->id);
+			write_byte(mod->id);						//sends the ADDR | R byte after the repeated start has been sent.
 	}
-	else if(mod->last_byte_transmitted){
+	else if(mod->last_byte_transmitted){				//the ADDR | R byte has already been sent, so should change to RX mode.
 		i2c_dr_set_tx_rx_mode(mod->id, false);
-		read_byte(mod->id);
+		read_byte(mod->id);								//dummy read : triggers the necessary clock cycles for the slave to transfer the first data byte.
 	}
 	else
-		write_byte(mod->id);
+		write_byte(mod->id);							//general case for TX mode : sending a byte of data.
 
 }
 static void handle_rx_mode(i2c_module_id_int_t mod_id){
-	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
-	if(mod->last_byte_read){
-		send_start_stop(mod->id, false);
-		read_byte(mod->id);
-		mod->new_data = true;
+	if(i2cm_mods[mod_id].last_byte_read){
+		send_start_stop(mod_id, false);
+		/*if we want to read N bytes from the slave, N+1 reading calls should be performed to get those bytes,
+		 * the first reading call is a dummy read an is made when changing to RX mode from TX mode.
+		 * the last reading call is performed AFTER the stop signal has been sent so as not to trigger any more clock cycles in the bus*/
+		read_byte(mod_id);
+		i2cm_mods[mod_id].new_data = true;
+	}
+	else{
+		read_byte(mod_id);
 	}
 }
 
@@ -230,11 +239,15 @@ void i2c_master_int_set_slave_addr(i2c_module_id_int_t mod_id, unsigned char sla
 static void read_byte(i2c_module_id_int_t mod_id){
 	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
-	i2c_dr_send_ack(mod->id, true);
-	gpioToggle(DEBUG_PIN);
-	unsigned char data = i2c_dr_read_data(mod->id);
-	gpioToggle(DEBUG_PIN);
-	q_pushback(&(mod->buffer), data);
+	//reading call number N from the N+1 calls that should be performed to read N bytes.
+	if(mod->to_be_read_length == 1)
+		i2c_dr_send_ack(mod_id, true);			//sends NACK for the N+1 byte
+	else
+		i2c_dr_send_ack(mod_id, false);
+//	gpioToggle(DEBUG_PIN);
+	unsigned char data = i2c_dr_read_data(mod->id);		//performs the reading action, dummy or not.
+//	gpioToggle(DEBUG_PIN);
+	q_pushback(&(mod->buffer), data);					//inserts the new data into buffer, dummy or not.
 
 	mod->last_byte_read = !(--(mod->to_be_read_length));
 	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
@@ -248,11 +261,11 @@ static void write_byte(i2c_module_id_int_t mod_id){
 }
 
 bool i2c_master_int_bus_busy(i2c_module_id_int_t mod_id){
+	//both software and hardware should be free for the bus to be free!
 	return i2cm_mods[mod_id].bus_busy || i2c_dr_bus_busy(mod_id);
 }
 static void send_start_stop(i2c_module_id_int_t mod_id, bool start_stop){
-	for(int i = 0; i < AMOUNT_I2C_INT_MOD; i++)
-		i2cm_mods[i].bus_busy = start_stop;
+	i2cm_mods[mod_id].bus_busy = start_stop;				//informs the bus is busy (software)
 
 	i2c_dr_send_start_stop(mod_id, start_stop);
 }
