@@ -11,14 +11,14 @@
 #endif
 
 
-void q_init(msg_queue_t * q)
+void q_init(queue_t * q)
 {
 	q->len = q->in = q->out = 0;
 }
 
 
 //Wait for data
-uint8_t q_read_blocking(msg_queue_t * q)
+uint8_t q_read_blocking(queue_t * q)
 {
 	uint8_t ans;
     //Atomic operation (assembly)
@@ -35,7 +35,7 @@ uint8_t q_read_blocking(msg_queue_t * q)
 }
 
 //Flush queue
-void q_flush(msg_queue_t * q)
+void q_flush(queue_t * q)
 {
 #ifndef ROCHI_DEBUG
     hw_DisableInterrupts();
@@ -48,7 +48,7 @@ void q_flush(msg_queue_t * q)
 }
 
 //Add data to queue
-bool q_pushback(msg_queue_t * q, uint8_t data)
+bool q_pushback(queue_t * q, uint8_t data)
 {
     bool ret_val = false;
 #ifndef ROCHI_DEBUG
@@ -72,7 +72,7 @@ bool q_pushback(msg_queue_t * q, uint8_t data)
 
 
 //Add data to queue
-bool q_pushfront(msg_queue_t * q, uint8_t data)
+bool q_pushfront(queue_t * q, uint8_t data)
 {
     bool ret_val = false;
 #ifndef ROCHI_DEBUG
@@ -95,20 +95,20 @@ bool q_pushfront(msg_queue_t * q, uint8_t data)
 
 
 //Get current queue length
-unsigned int q_length(msg_queue_t * q)
+unsigned int q_length(queue_t * q)
 {
     //atomic read operation (assembly)
     return q->len;
 }
 
-bool q_isfull(msg_queue_t * q)
+bool q_isfull(queue_t * q)
 {
 	return q->len == Q_MAX_LENGTH;
 }
 
 
 
-uint8_t q_popfront(msg_queue_t * q)
+uint8_t q_popfront(queue_t * q)
 {
 	uint8_t data = 0;
 
