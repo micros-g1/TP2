@@ -50,6 +50,8 @@ typedef struct{
 	bool second_2_last_byte_2_be_read;
 	queue_t buffer;
 
+	bool new_data;
+
 	int to_be_read_length;
 
 } i2c_module_int_t;

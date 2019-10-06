@@ -12,6 +12,8 @@
 #include "util/queue.h"
 #include <stdlib.h>
 #include "gpio.h"
+#include "MK64F12.h"
+
 /*-------------------------------------------
  ----------------DEFINES---------------------
  -------------------------------------------*/
@@ -58,6 +60,7 @@ void i2c_master_int_init(i2c_module_id_int_t mod_id, i2c_module_int_t* mod){
 static void i2c_master_int_reset(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 
+	mod->new_data = false;
 	mod->starf_log_count = 0;
 	mod->last_byte_transmitted = false;
 	mod->last_byte_read = false;
@@ -101,6 +104,9 @@ static void handle_master_mode(i2c_modules_dr_t mod_id){
 
 static void handle_tx_mode(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
+	if( ((I2C0->S) >> 4) & 1U){					//DEBUG!!!
+		i2c_dr_send_start_stop(mod_id, false);
+	}
 
 	if(( mod->last_byte_transmitted || i2c_dr_get_rxak(mod_id) ) && (mod->to_be_read_length == 0))
 		i2c_dr_send_start_stop(mod_id, false);
@@ -117,20 +123,19 @@ static void handle_tx_mode(i2c_modules_dr_t mod_id){
 	else
 		write_byte(mod);
 
-
 }
 static void handle_rx_mode(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 
 	if(mod->last_byte_read){
 		i2c_dr_send_start_stop(mod->id, false);
+		read_byte(mod);
+		mod->new_data = true;
 	}
-	/*ignoring the second to last by to be read condition because i m only reading from the magnetometer!!!*/
-
 }
 
 bool i2c_master_int_has_new_data(i2c_module_int_t* mod){
-	return (q_length(&(mod->buffer)) > 0);
+	return mod->new_data;
 }
 
 void i2c_master_int_read_data(i2c_module_int_t* mod, unsigned char* question, int len_question, int amount_of_bytes){
@@ -151,10 +156,11 @@ void i2c_master_int_read_data(i2c_module_int_t* mod, unsigned char* question, in
 }
 
 int i2c_master_int_get_new_data_length(i2c_module_int_t* mod){
-	return q_length(&(mod->buffer));
+	return q_length(&(mod->buffer))-1;
 }
 
 void i2c_master_int_get_new_data(i2c_module_int_t* mod, unsigned char* read_data, int amount_of_bytes){
+	read_data[0] = q_popfront(&(mod->buffer));		//filtering dummy read.
 	for (int i =0; i < amount_of_bytes; i++)
 		read_data[i] = q_popfront(&(mod->buffer));
 }
@@ -181,23 +187,20 @@ void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add
 }
 
 static void read_byte(i2c_module_int_t* mod){
-//	i2c_dr_send_ack(mod->id, !mod->last_byte_read);
+	static int calls = 0;
 
-	gpioToggle(DEBUG_READ);
 	i2c_dr_send_ack(mod->id, true);
-
-	unsigned char data= i2c_dr_read_data(mod->id);
+	gpioToggle(DEBUG_PIN);
+	unsigned char data = i2c_dr_read_data(mod->id);
+	gpioToggle(DEBUG_PIN);
 	q_pushback(&(mod->buffer), data);
 
 	mod->last_byte_read = !(--(mod->to_be_read_length));
 	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
-//	i2c_dr_send_ack(mod->id, !mod->last_byte_read);
-
-
+	calls++;
 }
 
 static void write_byte(i2c_module_int_t* mod){
-
 
 	i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);
 	mod->last_byte_transmitted = ( (++mod->written_bytes) >= mod->to_be_written_length );

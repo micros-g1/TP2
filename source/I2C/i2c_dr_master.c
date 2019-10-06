@@ -178,9 +178,10 @@ void i2c_dr_write_data(i2c_modules_dr_t mod, unsigned char data){
 	i2c_dr_modules[mod]->D = data;
 }
 unsigned char i2c_dr_read_data(i2c_modules_dr_t mod){
-	return i2c_dr_modules[mod]->D;
+	unsigned char data = i2c_dr_modules[mod]->D;
+	data = i2c_dr_modules[mod]->D;
+	return data;
 }
-
 
 /**************************************
 ************I2Cx_FLT field*************
@@ -233,6 +234,8 @@ void i2c_dr_set_fack(i2c_modules_dr_t mod, bool enabled){
 	unsigned char reg = ((I2C_Type*) I2C0_BASE)->SMB;
 	(i2c_dr_modules[mod]->SMB) ^= (-(unsigned char)enabled ^ reg) & (1UL << 7);
 }
+
+
 
 
 

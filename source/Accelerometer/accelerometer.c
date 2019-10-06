@@ -49,7 +49,7 @@ static void write_reg_and_wait(unsigned char reg, unsigned char data, int reload
 static void config_delay(int reload);
 static void wait_for(int reload);
 
-static accel_errors_t _mqx_ints_FXOS8700CQ_start();
+static accel_errors_t start();
 static bool delaying = false;
 static accel_errors_t config_ok;
 
@@ -66,7 +66,7 @@ void accel_init(){
 	systick_init();
 	config_ok = I2C_ERROR;
 
-	while(_mqx_ints_FXOS8700CQ_start() != I2C_ERROR);
+	while(start() != I2C_ERROR);
 //	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
 //	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
 
@@ -76,20 +76,16 @@ void accel_init(){
 
 // FROM  THE FXOS8700CQ REFERENCE MANUAL, SECTION 13.4
 // function configures FXOS8700CQ combination accelerometer and magnetometer sensor
-static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
+static accel_errors_t start(){
 
-//	unsigned char question = ACCEL_WHOAMI;
-	unsigned char question[2] = {ACCEL_WHOAMI, ACCEL_WHOAMI};
+	unsigned char question = ACCEL_WHOAMI;
 
 	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
-//	i2c_master_int_write_data(&i2c_module, question, 1);
-	i2c_master_int_read_data(&i2c_module, question, 1 , 1);
+	i2c_master_int_read_data(&i2c_module, &question, 1 , 1);
 
 	unsigned char data[2] = {0, 0};
 
-	while(!i2c_master_int_has_new_data(&i2c_module)){
-
-	}
+	while(!i2c_master_int_has_new_data(&i2c_module));
 
 	if (i2c_master_int_get_new_data_length(&i2c_module) != 1)
 		return (I2C_ERROR); // read and check the FXOS8700CQ WHOAMI register
@@ -98,8 +94,6 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 		if(data[0] != ACCEL_WHOAMI_VAL)
 			return (I2C_ERROR);
 	}
-
-	wait_for(1000);
 
 	write_reg_and_wait(ACCEL_M_CTRL_REG1, 0x00, 1000);
 
@@ -110,7 +104,6 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 	write_reg_and_wait(ACCEL_XYZ_DATA_CFG, 0x01, 1000);
 
 	write_reg_and_wait(ACCEL_CTRL_REG1, 0x0D, 1000);
-
 
 	systick_delete_callback(handle_delay);
 	delaying = false;
