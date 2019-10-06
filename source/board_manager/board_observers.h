@@ -10,7 +10,8 @@
 typedef enum {O_PC, O_CAN, N_OBSERVERS} observer_t;
 
 void bo_init();
-void bo_notify(observer_t who, uint8_t board_id, angle_type_t angle_type, int32_t angle_value);
+void bo_notify_data(observer_t who, uint8_t board_id, angle_type_t angle_type, int32_t angle_value);
+void bo_notify_timeout(observer_t who, uint8_t board_id);
 void bo_periodic();
 
 

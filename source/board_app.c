@@ -3,9 +3,9 @@
 //
 
 #include "board_app.h"
-#include "board_database.h"
-#include "board_observers.h"
-#include "board_ev_sources.h"
+#include "board_manager/board_database.h"
+#include "board_manager/board_observers.h"
+#include "board_manager/board_ev_sources.h"
 
 // board notification manager
 // recibe: id placa, tipo angulo, valor angulo, a quien
@@ -46,16 +46,24 @@ void ba_periodic()
     be_periodic();  // register new events
 
     // check if there is any new information and if so, notify observers
-    unsigned int i, j;
+    unsigned int i;
     for (i = 0; i < N_MAX_BOARDS; i++) {
-        for (j = 0; j < N_ANGLE_TYPES; j++) {
-            if (bd_newdata(i, j)) {
-                int32_t angle_value = bd_get_angle(i, j);
+        ev_db_t ev = bd_newdata(i);
+
+        while (ev != N_EVS_DB) {
+            if (ev == NEW_TIMEOUT) {
+                bo_notify_timeout(O_PC, i);
+                ev = N_EVS_DB;
+            }
+            else {
+                int32_t angle_value = bd_get_angle(i, (angle_type_t)ev);
                 if (i == BA_MY_ID) {
-                    bo_notify(i, O_CAN, j, angle_value);   // notify board network
+                    bo_notify_data(O_CAN, i, (angle_type_t) ev, angle_value);   // notify board network
                 }
 
-                bo_notify(i, O_PC, j, angle_value);        // notify pc network
+                bo_notify_data(O_PC, i, (angle_type_t) ev, angle_value);        // notify pc network
+                ev = bd_newdata(i);
+
             }
         }
     }

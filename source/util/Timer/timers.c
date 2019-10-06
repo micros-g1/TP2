@@ -1,6 +1,6 @@
 #include "timers.h"
 #include <stdlib.h>
-#include <Interrupts/SysTick.h>
+#include "../SysTick.h"
 
 #define SYSTICKS_PER_MILLISECOND 6
 

@@ -3,13 +3,19 @@
 //
 
 #include "pc_interface.h"
-#include "UART.h"
-#include "msg_queue.h"
+
+#ifndef ROCHI_DEBUG
+#include "UART/uart.h"
+#else
+#include <stdio.h>
+#endif
+
+#include "../util/msg_queue.h"
 #include <time.h>
 
 #define PC_UART 0
 
-#define PC_MIN_MS (1000/PC_MAX_FREQ) // it will round to a slightly faster frequency, but this is not an issue
+#define PC_MIN_MS (1000.0/PC_MAX_FREQ) // it will round to a slightly faster frequency, but this is not an issue
 
 #if Q_MSG_LEN != PC_MSG_LEN
 #error "queue msg size does not match pc msg len"
@@ -17,7 +23,6 @@
 
 static msg_queue_t uart_q;
 static clock_t last;
-
 
 
 void pc_init()
@@ -29,12 +34,14 @@ void pc_init()
 
     mq_init(&uart_q);
 
+#ifndef ROCHI_DEBUG
     uart_cfg_t uart_config;
     uart_config.baudrate = 9600;
     uart_config.eight_bit_word = true;
     uart_config.interrupts = true;
     uart_config.parity = false;
     uartInit(PC_UART, uart_config);
+#endif
 
     last = clock();
 }
@@ -52,7 +59,11 @@ void pc_periodic()
         if (time_diff >= PC_MIN_MS) {
             char msg[PC_MSG_LEN + 1]; // leave one byte for terminator
             mq_popfront(&uart_q, msg);
+#ifndef ROCHI_DEBUG
             uartWriteMsg(PC_UART, msg, PC_MSG_LEN);
+#else
+            printf("PC: %s \n", msg);
+#endif
             last = clock();
         }
     }

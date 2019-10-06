@@ -19,16 +19,24 @@
  ******************************************************************************/
 
 #define N_MAX_BOARDS        8
+
+#ifndef ROCHI_DEBUG
 #define ANGLE_TIMEOUT_MS    1000    // external boards are considered 'dead' after this time without new data
 #define BA_UPDATE_MS        500     // resend angles from internal boards after this time has elapsed
-
+#else
+#define ANGLE_TIMEOUT_MS    10000    // external boards are considered 'dead' after this time without new data
+#define BA_UPDATE_MS        5000     // resend angles from internal boards after this time has elapsed
+#endif
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
 
+typedef enum {NEW_PITCH, NEW_ROLL, NEW_ORIENTATION, NEW_TIMEOUT, N_EVS_DB} ev_db_t;
 
-
+#if NEW_PITCH != PITCH || NEW_ROLL != ROLL || NEW_ORIENTATION != ORIENTATION
+#error angles must have the same order as in board_types.h!!
+#endif
 /*******************************************************************************
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
@@ -74,7 +82,7 @@ int32_t bd_get_angle(uint8_t id, angle_type_t angle_type);
 bool bd_is_ok(uint8_t id);
 
 bool bd_newdata_any(uint8_t id);
-bool bd_newdata(uint8_t id, angle_type_t angle_type);
+ev_db_t bd_newdata(uint8_t id);
 
 
 

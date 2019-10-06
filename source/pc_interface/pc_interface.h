@@ -7,8 +7,15 @@
 
 #include <stdint.h>
 
+#define ROCHI_DEBUG
+
+#ifdef ROCHI_DEBUG
+#define PC_MAX_FREQ 10
+#else
 #define PC_MAX_FREQ 60 // 60 frames per second is the fastest ppl will notice so no point in going any faster
-#define PC_MSG_LEN  6  // one byte for id, one for angle type, one for sign, three for number
+#endif
+
+#define PC_MSG_LEN  7  // one byte for pckg type, one for id, one for angle type, one for sign, three for number
 
 
 void pc_init();

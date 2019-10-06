@@ -51,25 +51,25 @@ void bd_init(void)
 
     unsigned int i;
     for (i = 0; i < N_MAX_BOARDS; i++) {
-        boards[i].ok = false;
+        boards[i].valid = false;
     }
 }
 
 void bd_add_board(uint8_t id, bool internal) {
     if (id < N_MAX_BOARDS) {
         boards[id].internal = internal;
-        boards[id].ok = true;
-        boards[id].yawData = internal; // for external boards, we assume we wont get yaw til we get one measurement
+        boards[id].valid = true;
+        boards[id].orientationData = internal; // for external boards, we assume we wont get yaw til we get one measurement
 
         unsigned int i;
-        time_t now;
-        time(&now);
+
         for (i = 0; i < N_ANGLE_TYPES; i++){
             boards[id].newData[i] = true;
             boards[id].angles[i] = 0;
-            boards[id].last_update[i] = now;
-            boards[id].id = id;  // this will not be used, set for consistency
+            boards[id].timed_out[i] = true; // these will all be true til data is updated
         }
+        boards[id].id = id;  // this will not be used, set for consistency
+        boards[id].new_timeout = false; // default state
     }
 }
 
@@ -77,33 +77,35 @@ void bd_update(uint8_t id, angle_type_t angle_type, int32_t value) {
     if (id >= N_MAX_BOARDS) {
         return; // error
     }
+
     clock_t now = clock();
     boards[id].angles[angle_type] = value;
-    if (angle_type == YAW) {
-        boards[id].yawData = true;
+    if (angle_type == ORIENTATION) {
+        boards[id].orientationData = true;
     }
     boards[id].last_update[angle_type] = now;
-
-    check_timeouts(&boards[id]);
-    if (boards[id].ok) {
-        boards[id].newData[angle_type] = true;
-    }
+    boards[id].timed_out[angle_type] = false;
+    boards[id].newData[angle_type] = true;
 }
 
 
 int32_t bd_get_angle(uint8_t id, angle_type_t angle_type)
 {
-    if (bd_is_ok(id)) {
+    if (id >= N_MAX_BOARDS) {
         return UINT32_MAX; // error
     }
-
+    boards[id].newData[angle_type] = false;
     return boards[id].angles[angle_type];
 }
 
 
 bool bd_is_ok(uint8_t id)
 {
-    return id >= N_MAX_BOARDS || !check_timeouts(&boards[id]);
+	if (id >= N_MAX_BOARDS)
+		return false;
+
+	check_timeouts(&boards[id]);
+    return !(boards[id].timed_out[0] || boards[id].timed_out[1] || boards[id].timed_out[2]);
 }
 
 
@@ -111,19 +113,27 @@ void check_timeouts(board_t * board)
 {
     clock_t now = clock();
 
-    board->ok = true;
-    unsigned int i, n = board->yawData ? N_ANGLE_TYPES : N_ANGLE_TYPES - 1;
+    unsigned int i, n = board->orientationData ? N_ANGLE_TYPES : N_ANGLE_TYPES - 1;
     for (i = 0; i < n; i++) {
-        float ms_elapsed = (now - board->last_update[i])*1000.0/CLOCKS_PER_SEC;
-        if (board->internal) {
-            if (ms_elapsed >= BA_UPDATE_MS) {
-                board->newData[i] = true; // must resend data so other boards dont think im dead
+        if (!board->timed_out[i]) { // no point in checking if it was already timed out
+            float ms_elapsed = (now - board->last_update[i]) * 1000.0 / CLOCKS_PER_SEC;
+
+            if (board->internal) {
+                if (ms_elapsed >= BA_UPDATE_MS) {
+                    board->newData[i] = true; // must resend data so other boards dont think im dead
+                }
+            } else if (ms_elapsed >= ANGLE_TIMEOUT_MS) {
+                board->timed_out[i] = true;
+
+                unsigned int j;
+                board->new_timeout = true;
+                for (j = 0; j < n; j++) {
+                    if (j != i && board->timed_out[j]) {
+                        board->new_timeout = false;
+                        break;
+                    }
+                }
             }
-        }
-        else if (ms_elapsed >= ANGLE_TIMEOUT_MS) {
-            board->ok = false;   // this board is dead
-            board->newData[i] = true;
-            break;              // no point in checking other angles
         }
     }
 }
@@ -144,9 +154,27 @@ bool bd_newdata_any(uint8_t id)
 }
 
 
-bool bd_newdata(uint8_t id, angle_type_t angle_type)
+ev_db_t bd_newdata(uint8_t id)
 {
-    return id < N_MAX_BOARDS && boards[id].newData[angle_type];
+    ev_db_t ev = N_EVS_DB;
+    if (id <= N_MAX_BOARDS) {
+        if (bd_is_ok(id)) {
+            unsigned int i;
+            unsigned int n = boards[id].orientationData ? N_ANGLE_TYPES : N_ANGLE_TYPES - 1;
+            for (i = 0; i < n; i++) {
+                if (boards[id].newData[i]) {
+                    ev = i;
+                    boards[id].newData[i] = false;
+                    break;
+                }
+            }
+        }
+        else if (boards[id].new_timeout) {
+            ev = NEW_TIMEOUT;
+            boards[id].new_timeout = false;
+        }
+    }
+    return ev;
 }
 
 /*******************************************************************************

@@ -7,10 +7,14 @@
 
 #include "board_type.h"
 
+
 #define MAX_LEN_CAN_MSG 5
 
+#ifndef ROCHI_DEBUG
 #define CAN_MAX_FREQ    20
-
+#else
+#define CAN_MAX_FREQ    1
+#endif
 typedef void (*bn_callback_t )(uint8_t msg_id, char * can_data);
 
 

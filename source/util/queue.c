@@ -3,8 +3,12 @@
 //
 
 #include "queue.h"
-#include "hardware.h"
 
+#define ROCHI_DEBUG
+
+#ifndef ROCHI_DEBUG
+#include "hardware.h"
+#endif
 
 
 void q_init(msg_queue_t * q)
@@ -33,17 +37,23 @@ uint8_t q_read_blocking(msg_queue_t * q)
 //Flush queue
 void q_flush(msg_queue_t * q)
 {
+#ifndef ROCHI_DEBUG
     hw_DisableInterrupts();
+#endif
     //Must set these three variables to zero before continuing...
     q_init(q);
+#ifndef ROCHI_DEBUG
     hw_EnableInterrupts();
+#endif
 }
 
 //Add data to queue
 bool q_pushback(msg_queue_t * q, uint8_t data)
 {
     bool ret_val = false;
+#ifndef ROCHI_DEBUG
     hw_DisableInterrupts();
+#endif
 
     if(q->len != Q_MAX_LENGTH)
     {
@@ -53,7 +63,10 @@ bool q_pushback(msg_queue_t * q, uint8_t data)
         q->len++;
         ret_val = true;
     }
+
+#ifndef ROCHI_DEBUG
     hw_EnableInterrupts();
+#endif
     return ret_val;
 }
 
@@ -62,8 +75,9 @@ bool q_pushback(msg_queue_t * q, uint8_t data)
 bool q_pushfront(msg_queue_t * q, uint8_t data)
 {
     bool ret_val = false;
+#ifndef ROCHI_DEBUG
     hw_DisableInterrupts();
-
+#endif
     if(q->len != Q_MAX_LENGTH) {
     	if(q->out == 0) {
     		q->out = Q_MAX_LENGTH;
@@ -73,7 +87,9 @@ bool q_pushfront(msg_queue_t * q, uint8_t data)
         q->len++;
         ret_val = true;
     }
+#ifndef ROCHI_DEBUG
     hw_EnableInterrupts();
+#endif
     return ret_val;
 }
 

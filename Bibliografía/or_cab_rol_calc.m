@@ -1,8 +1,8 @@
 % This will fail if B is parallel to G (won't happen)
 
 % Measured B, G
-% B = [0, 0, 1]'; G = [0, 1, 0]'; % Expected = [0, -90, 0]
-B = [0, 1, 0]' ; G = [0, 0, -1]'; % Expected = [0,0,0]
+B = [0, 0, 1]'; G = [0, 1, 0]'; % Expected = [0, -90, 0]
+% B = [0, 1, 0]' ; G = [0, 0, -1]'; % Expected = [0,0,0]
 % B = [0, 1, -0.5]' ; G = [0, 0, -1]'; % Expected = [0,0,0]
 % B = [0, 0, -1]' ; G = [0, -1, 0]'; % Expected = [0, 90, 0]
 % B = [0, -1, 0]' ; G = [0, 0, 1]'; % Expected = [180, 0, 180]
@@ -28,5 +28,4 @@ cab_rec = asin( -R(3,2) );
 orient_rec = -atan2( R(1,2), R(2,2) );
 
 %Show
-disp("Angulos recuperados (Grados):")
 disp(rad2deg([orient_rec,cab_rec,rol_rec]));

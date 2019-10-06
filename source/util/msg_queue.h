@@ -20,7 +20,7 @@
 
 //Total number of elements that event queue can hold
 #define Q_MAX_LENGTH	256
-#define Q_MSG_LEN 6 // without terminator
+#define Q_MSG_LEN 7 // without terminator
 
 typedef struct {
     volatile char buffer[Q_MAX_LENGTH][Q_MSG_LEN+1]; //leave one byte for terminator
