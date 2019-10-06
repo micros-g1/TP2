@@ -34,7 +34,7 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;
-//	i2c_pos->SMB |= 1UL << 7;		//FACK to 1.
+	i2c_pos->SMB |= 1UL << 7;		//FACK to 1.
 
 	i2c_pos->FLT |= I2C_FLT_SSIE_MASK;
 	uint32_t irq_interrupts[] = I2C_IRQS;//get the module interrupt

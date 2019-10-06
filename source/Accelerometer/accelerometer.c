@@ -82,8 +82,8 @@ static accel_errors_t _mqx_ints_FXOS8700CQ_start(){
 	unsigned char question[2] = {ACCEL_WHOAMI, ACCEL_WHOAMI};
 
 	i2c_master_int_set_slave_add(&i2c_module, ACCEL_SLAVE_ADDR);
-	i2c_master_int_write_data(&i2c_module, question, 1);
-//	i2c_master_int_read_data(&i2c_module, question, 1 , 1);
+//	i2c_master_int_write_data(&i2c_module, question, 1);
+	i2c_master_int_read_data(&i2c_module, question, 1 , 1);
 
 	unsigned char data[2] = {0, 0};
 

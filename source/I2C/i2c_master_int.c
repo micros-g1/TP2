@@ -73,6 +73,9 @@ static void hardware_interrupt_routine(i2c_modules_dr_t mod_id){
 	//the order of each call is important!!!
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 	if(mod->last_byte_transmitted && mod->last_byte_read){
+		i2c_dr_send_ack(mod->id, true);	//NACK
+		gpioToggle(DEBUG_PIN);
+//		i2c_dr_send_start_stop(mod, start_stop)
 		i2c_dr_clear_iicif(mod_id);
 		return;
 	}
@@ -115,27 +118,22 @@ static void handle_tx_mode(i2c_modules_dr_t mod_id){
 	}
 	else if(mod->last_byte_transmitted){
 		i2c_dr_set_tx_rx_mode(mod->id, false);
-		read_byte(mod);
-//		i2c_dr_send_start_stop(mod->id, false);
-//		i2c_dr_send_ack(mod->id, true);
+		handle_rx_mode(mod->id);
 	}
-	else{
+	else
 		write_byte(mod);
-	}
+
 
 }
 static void handle_rx_mode(i2c_modules_dr_t mod_id){
 	i2c_module_int_t* mod = i2cm_mods[mod_id];
 
-	if(mod->last_byte_read)
-		i2c_dr_send_start_stop(mod_id, false);
-	else{
-		read_byte(mod);
+	read_byte(mod);
 
-		if(mod->last_byte_read)
-			i2c_dr_send_start_stop(mod_id, false);
+	if(mod->last_byte_read){
+//		i2c_dr_send_start_stop(mod_id, false);
+//		gpioToggle(DEBUG_PIN);
 	}
-
 	/*ignoring the second to last by to be read condition because i m only reading from the magnetometer!!!*/
 
 }
@@ -192,7 +190,7 @@ void i2c_master_int_set_slave_add(i2c_module_int_t* mod, unsigned char slave_add
 }
 
 static void read_byte(i2c_module_int_t* mod){
-	i2c_dr_send_ack(mod->id, mod->last_byte_read);
+//	i2c_dr_send_ack(mod->id, !mod->last_byte_read);
 
 	gpioToggle(DEBUG_READ);
 	unsigned char data= i2c_dr_read_data(mod->id);
@@ -200,14 +198,13 @@ static void read_byte(i2c_module_int_t* mod){
 
 	mod->last_byte_read = !(--(mod->to_be_read_length));
 	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
-//	i2c_dr_send_ack(mod->id, mod->last_byte_read);
+//	i2c_dr_send_ack(mod->id, !mod->last_byte_read);
 
-//	if(mod->last_byte_read)
-//		i2c_dr_send_start_stop(mod->id, false);
+
 }
 
 static void write_byte(i2c_module_int_t* mod){
-	gpioToggle(DEBUG_PIN);
+
 
 	i2c_dr_write_data(mod->id, mod->to_be_written[mod->written_bytes]);
 	mod->last_byte_transmitted = ( (++mod->written_bytes) >= mod->to_be_written_length );
