@@ -40,9 +40,9 @@ typedef struct{
 	int written_bytes;
 
 	bool rs_sent;
+
 	//rx mode
 	bool last_byte_read;
-	bool second_2_last_byte_2_be_read;
 	queue_t buffer;
 
 	bool new_data;
@@ -96,7 +96,6 @@ static void i2c_master_int_reset(i2c_modules_dr_t mod_id){
 	mod->starf_log_count = 0;
 	mod->last_byte_transmitted = false;
 	mod->last_byte_read = false;
-	mod->second_2_last_byte_2_be_read = false;
 	mod->to_be_written_length = 0;
 	mod->written_bytes = 0;
 	mod->to_be_read_length = 0;
@@ -172,32 +171,31 @@ static void handle_rx_mode(i2c_module_id_int_t mod_id){
 		read_byte(mod_id);
 		i2cm_mods[mod_id].new_data = true;
 	}
-	else{
-		read_byte(mod_id);
-	}
+	else
+		read_byte(mod_id);	//general case, reading a byte of data.
+
 }
 
 bool i2c_master_int_has_new_data(i2c_module_id_int_t mod_id){
-	i2c_module_int_t* mod = &i2cm_mods[mod_id];
-	return mod->new_data;
+	return i2cm_mods[mod_id].new_data;
 }
 
 void i2c_master_int_read_data(i2c_module_id_int_t mod_id, unsigned char* question, int len_question, int amount_of_bytes){
 	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
+	//is there information to be sent before the reading action?
 	if( len_question > 0 ){
-		i2c_master_int_write_data(mod->id, question, len_question);
+		i2c_master_int_write_data(mod->id, question, len_question);			//send that information
+		// add the ADDR | R byte to the end of the buffer
 		mod->to_be_written[mod->to_be_written_length] = (mod->slave_address << 1) | 1u;
 		(mod->to_be_written_length)++;
 	}
 	else{
-		i2c_master_int_write_data(mod->id, NULL, 0);
+		i2c_master_int_write_data(mod->id, NULL, 0);		//only sent the ADDR | R byte
 		mod->to_be_written[0] = (mod->slave_address << 1) | 1u;
 	}
 	mod->to_be_read_length = amount_of_bytes;
 	mod->last_byte_read = false;
-	mod->second_2_last_byte_2_be_read = (mod->to_be_read_length > 1);
-
 }
 
 int i2c_master_int_get_new_data_length(i2c_module_id_int_t mod_id){
@@ -232,8 +230,7 @@ void i2c_master_int_write_data(i2c_module_id_int_t mod_id, unsigned char* write_
 
 
 void i2c_master_int_set_slave_addr(i2c_module_id_int_t mod_id, unsigned char slave_add){
-	i2c_module_int_t* mod = &i2cm_mods[mod_id];
-	mod->slave_address = slave_add;
+	i2cm_mods[mod_id].slave_address = slave_add;
 }
 
 static void read_byte(i2c_module_id_int_t mod_id){
@@ -250,7 +247,6 @@ static void read_byte(i2c_module_id_int_t mod_id){
 	q_pushback(&(mod->buffer), data);					//inserts the new data into buffer, dummy or not.
 
 	mod->last_byte_read = !(--(mod->to_be_read_length));
-	mod->second_2_last_byte_2_be_read = mod->to_be_read_length > 1;
 }
 
 static void write_byte(i2c_module_id_int_t mod_id){

@@ -135,15 +135,16 @@ static void handling_reading(){
 	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN)){
 		i2c_master_int_get_new_data(I2C0_INT_MOD, reading_buffer, ACCEL_DATA_PACK_LEN);
 
+		//the first byte of the reading operation should be ignored!!
 		//accelerometer data : serial... 14 bits
-		last_read_data_acc.x = (int16_t)((reading_buffer[0] << 8) | reading_buffer[1])>> 2;
-		last_read_data_acc.y = (int16_t)((reading_buffer[2] << 8) | reading_buffer[3])>> 2;
-		last_read_data_acc.z = (int16_t)((reading_buffer[4] << 8) | reading_buffer[5])>> 2;
+		last_read_data_acc.x = (int16_t)((reading_buffer[1] << 8) | reading_buffer[2])>> 2;
+		last_read_data_acc.y = (int16_t)((reading_buffer[3] << 8) | reading_buffer[4])>> 2;
+		last_read_data_acc.z = (int16_t)((reading_buffer[5] << 8) | reading_buffer[6])>> 2;
 
 		//magnetometer data : serial... 16 bits
-		last_read_data_acc.x = (reading_buffer[6] << 8) | reading_buffer[7];
-		last_read_data_acc.y = (reading_buffer[8] << 8) | reading_buffer[9];
-		last_read_data_acc.z = (reading_buffer[10] << 8) | reading_buffer[11];
+		last_read_data_acc.x = (reading_buffer[7] << 8) | reading_buffer[8];
+		last_read_data_acc.y = (reading_buffer[9] << 8) | reading_buffer[10];
+		last_read_data_acc.z = (reading_buffer[11] << 8) | reading_buffer[12];
 	}
 }
 
