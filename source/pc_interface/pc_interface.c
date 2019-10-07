@@ -38,7 +38,6 @@ void pc_init()
     uart_cfg_t uart_config;
     uart_config.baudrate = 9600;
     uart_config.eight_bit_word = true;
-    uart_config.interrupts = true;
     uart_config.parity = false;
     uartInit(PC_UART, uart_config);
 #endif

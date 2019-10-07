@@ -7,11 +7,6 @@
 #include "board_manager/board_observers.h"
 #include "board_manager/board_ev_sources.h"
 
-// board notification manager
-// recibe: id placa, tipo angulo, valor angulo, a quien
-// arma mismo paquete
-// manda
-// clarisimo
 
 void ba_init()
 {
