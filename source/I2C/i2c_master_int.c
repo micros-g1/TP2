@@ -74,10 +74,11 @@ void i2c_master_int_init(i2c_module_id_int_t mod_id){
 	static bool initialized[AMOUNT_I2C_INT_MOD] = { false, false, false };
 	if(initialized[mod_id]) return;
 
+	i2c_dr_master_init(mod_id, hardware_interrupt_routine);
+
 	i2c_module_int_t* mod = &i2cm_mods[mod_id];
 
 	mod->id = mod_id;
-	i2c_dr_master_init(mod_id, hardware_interrupt_routine);
 
 	i2c_master_int_reset(mod_id);
 
