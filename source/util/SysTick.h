@@ -71,6 +71,19 @@ void systick_disable_callback(systick_callback_t callback);
  * @return void.
  */
 void systick_delete_callback(systick_callback_t callback);
+/**
+ * @brief restarts a specific callback. See also systick_pause_callback() .
+ * @param callback: callback to be restarted.
+ * @return void.
+ */
+void systick_restart_callback(systick_callback_t callback);
+/**
+ * @brief pause a specific callback without resetting the inner counter of that callback so that
+ * when the callback is restarted, the callback will have less time to reach its reload target.
+ * @param callback: callback to be paused
+ * @return void.
+ */
+void systick_pause_callback(systick_callback_t callback);
 
 /**
  * @brief Inform the user if a specific callback has been added (and not deleted after that) to sysTick

@@ -128,7 +128,23 @@ void systick_disable_callback(systick_callback_t callback) {
         }
     }
 }
+void systick_pause_callback(systick_callback_t callback) {
+	for(int i = 0; i < MAX_N_ST_CALLBACKS; i++) {
+        if (st_callbacks[i].func == callback) {
+            st_callbacks[i].enabled = false;
+            break;
+        }
+    }
+}
 
+void systick_restart_callback(systick_callback_t callback) {
+	for(int i = 0; i < MAX_N_ST_CALLBACKS; i++) {
+        if (st_callbacks[i].func == callback) {
+            st_callbacks[i].enabled = true;
+            break;
+        }
+    }
+}
 void systick_delete_callback(systick_callback_t callback){
 	for(int i = 0; i < MAX_N_ST_CALLBACKS; i++) {
         if (st_callbacks[i].func == callback) {
