@@ -30,7 +30,7 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	i2c_pos->F = 0x2E;		//set baud rate to Hz. mult == 0x0-> mult=1; scl div ==2E-> scl div=768; !!!
 
 //	i2c_pos->F = I2C_F_ICR(0x20) | I2C_F_MULT(0x2);
-	i2c_pos->C1 = 0xC0;	//IICEN = 1; IICIE = 1; MST = 0; TX = 0; TXAK = 1; RSTA = 0; WUEN = 0; DMAEN = 0.
+	i2c_pos->C1 = 0xC0;	//IICEN = 1; IICIE = 1; MST = 0; TX = 0; TXAK = 0; RSTA = 0; WUEN = 0; DMAEN = 0.
 	(i2c_pos->C2) &= ~(1UL << 3);	//RMEN = 0
 
 	interruption_callback[mod] = callback;

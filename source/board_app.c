@@ -15,6 +15,7 @@
 
 void ba_init()
 {
+    be_init();
     bd_init();
     unsigned int i;
     for (i = 0; i < N_MAX_BOARDS; i++) {
@@ -26,7 +27,6 @@ void ba_init()
         }
     }
 
-    be_init();
     bo_init();
 
     // initialize board network and pc network

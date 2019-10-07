@@ -11,14 +11,11 @@
 #include <I2C/i2c_master_int.h>
 #include "util/queue.h"
 #include <stdlib.h>
-#include "gpio.h"
 #include "MK64F12.h"
 
 /*-------------------------------------------
  ----------------DEFINES---------------------
  -------------------------------------------*/
-#define DEBUG_PIN 	PORTNUM2PIN (PC, 4)
-#define DEBUG_READ	PORTNUM2PIN	(PD, 0)
 
 /**
  * @typedef struct i2c_module_t
@@ -83,8 +80,6 @@ void i2c_master_int_init(i2c_module_id_int_t mod_id){
 	i2c_dr_master_init(mod_id, hardware_interrupt_routine);
 
 	i2c_master_int_reset(mod_id);
-	gpioMode(DEBUG_PIN, OUTPUT);
-	gpioMode(DEBUG_READ, OUTPUT);
 
 	initialized[mod_id] = true;
 }
@@ -241,9 +236,7 @@ static void read_byte(i2c_module_id_int_t mod_id){
 		i2c_dr_send_ack(mod_id, true);			//sends NACK for the N+1 byte
 	else
 		i2c_dr_send_ack(mod_id, false);
-//	gpioToggle(DEBUG_PIN);
 	unsigned char data = i2c_dr_read_data(mod->id);		//performs the reading action, dummy or not.
-//	gpioToggle(DEBUG_PIN);
 	q_pushback(&(mod->buffer), data);					//inserts the new data into buffer, dummy or not.
 
 	mod->last_byte_read = !(--(mod->to_be_read_length));

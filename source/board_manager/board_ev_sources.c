@@ -47,13 +47,18 @@ void be_init()
     bn_register_callback(can_callback);
     // initialize magnetometer & accelerometer
 
-    accel_init();
     clock_init();
     last = get_clock();
 }
 
 void be_periodic()
 {
+	static bool acc_init = false;
+	if (!acc_init) {
+	    accel_init();
+	}
+	acc_init = true;
+
     bn_periodic();
 
     clock_t now = get_clock();
