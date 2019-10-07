@@ -433,7 +433,7 @@ void mcp25625_internal_ISR()
 {
 	//IRQ may go low and high during ISR. Prevent multiple ISR calls
 	//Now, enable interrupts (callback may be time-demanding...)
-	//__enable_irq();
+	__enable_irq();
 	//Interrupt flag cleared by gpio.
 	if(callback_isr != NULL)
 		//Execute callback if callback given

@@ -128,7 +128,7 @@ static void pin_config(int pin){
 
 
 static void handling_read(){
-	systick_disable_callback(handling_reading_calls);		//cant try to read now because that will empty the buffer!!!
+//	systick_disable_callback(handling_reading_calls);		//cant try to read now because that will empty the buffer!!!
 
 	//reads the last ACC_DATA_PACK_LEN (exactly!!) amount of bytes from the i2c master buffer.
 	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN)){
@@ -145,7 +145,7 @@ static void handling_read(){
 		last_read_data_mag.y = (reading_buffer[9] << 8) | reading_buffer[10];
 		last_read_data_mag.z = (reading_buffer[11] << 8) | reading_buffer[12];
 	}
-	systick_enable_callback(handling_reading_calls);		//can now try to read
+//	systick_enable_callback(handling_reading_calls);		//can now try to read
 }
 
 static void handling_reading_calls(){
@@ -166,14 +166,14 @@ static void write_reg(unsigned char reg, unsigned char data){
 accel_raw_data_t accel_get_last_data(accel_data_options_t data_option){
 	accel_raw_data_t returnable;
 
-	systick_disable_callback (handling_read);		//cant update data while reading it!
+//	systick_disable_callback (handling_read);		//cant update data while reading it!
 
 	if(data_option == ACCEL_ACCEL_DATA)
 		returnable = last_read_data_acc;
 	else if(data_option == ACCEL_MAGNET_DATA)
 		returnable = last_read_data_mag;
 
-	systick_enable_callback(handling_read);		//can now update data if necessary
+//	systick_enable_callback(handling_read);		//can now update data if necessary
 
 	return returnable;
 }
