@@ -24,17 +24,18 @@ typedef enum
 }can_frame_t;
 
 /**
- * @struct can_fir_t
- * @brief CAN Frame Information Register
- * @details Information about CAN Frame
+ * @struct can_header_t
+ * @brief CAN Header
+ * @details Header with information about CAN Frame
  */
 typedef struct
 {
-	uint8_t	dlc;				///< @brief CAN Data Length Code
-								///< @details Should be <= 8. Can be larger, but 8 will be used\n
+	uint8_t	dlc;				///< @brief CAN Data Length Code.
+								///< @details Should be <= 8. Can be larger, but 8 will be used.
 	bool rtr;					///< @brief Remote transmission request.
-	can_frame_t frame_type;		///< @brief CAN Frame type
-}can_fir_t;
+	can_frame_t frame_type;		///< @brief CAN Frame type.
+	uint32_t message_id;		///< @brief CAN Message id.
+}can_header_t;
 
 /**
  * @struct can_message_t
@@ -43,28 +44,49 @@ typedef struct
  */
 typedef struct
 {
-	can_fir_t fir;				///< @brief CAN Frame Register
-	uint32_t message_id;			///< @brief CAN Message id
-	uint8_t data[8];			///< @brief data. data length: fir.dlc . Not used if fir.rtr .
+	can_header_t header;			///< @brief CAN Frame Register
+	uint8_t data[8];				///< @brief data. data length: fir.dlc . Not used if fir.rtr .
 }can_message_t;
+
+/**
+ * @struct can_filter_t
+ * @brief CAN Filter
+ * @details Information required for a CAN Filter
+ */
+typedef struct
+{
+	uint32_t mask;					///< @brief Mask used by filter
+	uint32_t id;					///< @brief Id used by filter
+	can_frame_t frame_type;			///< @brief filter frame type
+}can_filter_t;
 
 typedef void (*CAN_message_callback_t) (const can_message_t*);	///< @brief CAN Message Callback definition
 typedef void (*CAN_rx_buffer_overflow_callback_t)(void);	///< @brief CAN RX Buffer overflow callback definition
 
 /**
  * @brief CAN Initialization
- * @details Initializes CAN
+ * @details Initializes CAN. Must start CAN After initialization
  * @param id_mask mask for CAN id filter
  * @param id_filter filter data for CAN id filter
  */
-void CAN_init(uint32_t id_mask, uint32_t id_filter);
+void CAN_init();
 
 /**
- * @brief CAN change filter config
+ * @brief CAN set filter config
  * @param id_mask mask for CAN id filter
  * @param id_filter filter data for CAN id filter
  */
-void CAN_change_filter_config(uint32_t id_mask, uint32_t id_filter);
+void CAN_set_filter_config(can_filter_t filter);
+
+/**
+ * @brief Starts CAN Transfers.
+ */
+void CAN_start();
+
+/**
+ * @brief Stops CAN Transfers.
+ */
+void CAN_stop();
 
 /**
  * @brief CAN Message available
@@ -75,7 +97,7 @@ bool CAN_message_available();
 /**
  * @brief CAN Send Message
  * @param p_message Pointer to CAN Message to send
- * @return *true* if could send (else, transmit buffer is full)
+ * @return *true* if could send or was put in queue for sending
  */
 bool CAN_send(const can_message_t *p_message);
 

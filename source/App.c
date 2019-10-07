@@ -19,7 +19,6 @@
 /******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
-static void delayLoop(uint32_t veces);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -30,7 +29,13 @@ static void delayLoop(uint32_t veces);
 int i;
 void App_Init (void)
 {
-	CAN_init(0,0);
+	CAN_init();
+	can_filter_t filter;
+	filter.id = 0x00;
+	filter.mask = 0x00;
+	filter.frame_type = CAN_STANDARD_FRAME;
+	CAN_set_filter_config(filter);
+	CAN_start();
 	//DO INIT
 }
 
@@ -38,17 +43,19 @@ void App_Init (void)
 void App_Run (void)
 {
 	can_message_t message,rec_message;
-	message.fir.dlc = 1;
-	message.fir.frame_type = CAN_STANDARD_FRAME;
-	message.fir.rtr = false;
-	message.message_id = 0;
-	message.data[0] = 0xFF;
+	message.header.dlc = 1;
+	message.header.frame_type = CAN_STANDARD_FRAME;
+	message.header.rtr = false;
+	message.header.message_id = 0x5AA;
+	message.data[0] = 0x00;
+	bool message_available = false;
 	while(true)
 	{
 		CAN_send(&message);
-		CAN_send(&message);
+		message_available = CAN_message_available();
 		CAN_get(&rec_message);
-		CAN_get(&rec_message);
+		message_available = CAN_message_available();
+		message.data[0]++;
 	}
 }
 

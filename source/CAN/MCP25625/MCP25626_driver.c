@@ -17,10 +17,6 @@
 static uint8_t temp_array[TEMP_ARRAY_BUFFER_LENGTH];
 //Global flag to indicate if mcp25625 interrupt handling is enabled.
 static bool interrupts_enabled = false;
-//Local function for enabling / disabling interrupt handling.
-static void mcp25625_driver_enable_interrupt_handling(bool enable);
-//Interrupt handling will be disabled while on spi transfer
-//This will allow spi commands during interrupts, if wanted.
 
 /**
  * @enum mcp25625_instruction_t
@@ -83,7 +79,7 @@ typedef enum
 	TXB2_DATA = 5
 }mcp25625_tx_load_locations_t;
 
-static void mcp25625_internal_isr(void);
+static void mcp25625_internal_ISR(void);
 mcp25625_driver_callback_t callback_isr;
 
 static bool initialized = false;
@@ -98,7 +94,6 @@ void mcp25625_driver_init()
 	interrupts_init();
 	//Configure interrupt pin
 	gpioMode(MCP25625_INTREQ_PIN, INPUT);
-	gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_FALLING_EDGE, &mcp25625_internal_isr);
 	mcp25625_driver_enable_interrupt_handling(true);
 	//Configure SPI
 	spi_driver_init();
@@ -414,11 +409,8 @@ void mcp25625_driver_enable_interrupt_handling(bool enabled)
 {
 	if(!initialized)
 		return;
-	return;
-	//Interrupt flag is not cleared!
-	//Interrupts will be postponed if they happen while disabled.
 	if(enabled)
-		gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_BOTH_EDGES, &mcp25625_internal_isr);
+		gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_LOGIC_0, &mcp25625_internal_ISR);
 	else
 		gpioIRQ(MCP25625_INTREQ_PIN, GPIO_IRQ_MODE_DISABLE, NULL);
 	interrupts_enabled = enabled;
@@ -437,10 +429,14 @@ bool mcp25625_get_IRQ_flag(void)
 	return !gpioRead(MCP25625_INTREQ_PIN);
 }
 
-void mcp25625_internal_isr()
+void mcp25625_internal_ISR()
 {
+	//IRQ may go low and high during ISR. Prevent multiple ISR calls
+	//Now, enable interrupts (callback may be time-demanding...)
+	//__enable_irq();
 	//Interrupt flag cleared by gpio.
 	if(callback_isr != NULL)
 		//Execute callback if callback given
 		callback_isr();
+	//Re-enable interrupts
 }
