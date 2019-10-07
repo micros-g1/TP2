@@ -49,10 +49,13 @@ void bd_init(void)
         return;
     is_init = true;
 
+    clock_init();
     unsigned int i;
     for (i = 0; i < N_MAX_BOARDS; i++) {
         boards[i].valid = false;
     }
+
+    clock_init();
 }
 
 void bd_add_board(uint8_t id, bool internal) {
@@ -62,11 +65,12 @@ void bd_add_board(uint8_t id, bool internal) {
         boards[id].orientationData = internal; // for external boards, we assume we wont get yaw til we get one measurement
 
         unsigned int i;
-
+        clock_t now = get_clock();
         for (i = 0; i < N_ANGLE_TYPES; i++){
             boards[id].newData[i] = true;
             boards[id].angles[i] = 0;
             boards[id].timed_out[i] = true; // these will all be true til data is updated
+            boards[id].last_update[i] = now;
         }
         boards[id].id = id;  // this will not be used, set for consistency
         boards[id].new_timeout = false; // default state
@@ -78,7 +82,7 @@ void bd_update(uint8_t id, angle_type_t angle_type, int32_t value) {
         return; // error
     }
 
-    clock_t now = clock();
+    clock_t now = get_clock();
     boards[id].angles[angle_type] = value;
     if (angle_type == ORIENTATION) {
         boards[id].orientationData = true;
@@ -111,12 +115,12 @@ bool bd_is_ok(uint8_t id)
 
 void check_timeouts(board_t * board)
 {
-    clock_t now = clock();
+    clock_t now = get_clock();
 
     unsigned int i, n = board->orientationData ? N_ANGLE_TYPES : N_ANGLE_TYPES - 1;
     for (i = 0; i < n; i++) {
         if (!board->timed_out[i]) { // no point in checking if it was already timed out
-            float ms_elapsed = (now - board->last_update[i]) * 1000.0 / CLOCKS_PER_SEC;
+            float ms_elapsed = (now - board->last_update[i]) * 1000.0 / CLOCKS_PER_SECOND;
 
             if (board->internal) {
                 if (ms_elapsed >= BA_UPDATE_MS) {

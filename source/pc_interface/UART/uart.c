@@ -31,8 +31,8 @@ uint32_t clock_gating_masks[UART_N_IDS] = { SIM_SCGC4_UART0_MASK, SIM_SCGC4_UART
 
 
 
-static volatile msg_queue_t tx_q[UART_N_IDS];
-static volatile msg_queue_t rx_q[UART_N_IDS];
+static volatile queue_t tx_q[UART_N_IDS];
+static volatile queue_t rx_q[UART_N_IDS];
 
 
 void uart_irq_handler(uint8_t id);

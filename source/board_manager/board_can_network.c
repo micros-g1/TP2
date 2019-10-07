@@ -4,7 +4,7 @@
 
 #include "board_can_network.h"
 
-#define ROCHI_DEBUG
+//#define ROCHI_DEBUG
 
 #ifndef ROCHI_DEBUG
 #include "../CAN/CAN.h"
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #endif
 
-#include <time.h>
+#include "../util/clock.h"
 #include "../util/msg_queue.h"
 #include <string.h>
 
@@ -35,6 +35,9 @@ void bn_init() {
     CAN_init(0, 0);
 #endif
     mq_init(&can_q);
+
+    clock_init();
+    last = get_clock();
 }
 
 void bn_register_callback(bn_callback_t cb)
@@ -46,7 +49,7 @@ void bn_periodic()
 {
     // send
     if (can_q.len) {
-        float ms_elapsed = 1000.0*(clock()-last)/CLOCKS_PER_SEC;
+        float ms_elapsed = 1000.0*(get_clock()-last)/CLOCKS_PER_SECOND;
         if (ms_elapsed >= CAN_MIN_MS) {
             char data[MAX_LEN_CAN_MSG + 2]; // one byte for terminator, one for id
             mq_popfront(&can_q, data);
@@ -65,7 +68,7 @@ void bn_periodic()
 #else
             printf("CAN: %s \n", data);
 #endif
-            last = clock();
+            last = get_clock();
         }
     }
 

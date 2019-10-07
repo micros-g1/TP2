@@ -12,12 +12,12 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
+#include "../util/clock.h"
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
-#define ROCHI_DEBUG // debugging
+//#define ROCHI_DEBUG // debugging
 
 // standard angle type coding for external messages
 #define PITCH_CHAR  'c'

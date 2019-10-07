@@ -11,7 +11,7 @@
 #endif
 
 #include "../util/msg_queue.h"
-#include <time.h>
+#include "../util/clock.h"
 
 #define PC_UART 0
 
@@ -43,7 +43,8 @@ void pc_init()
     uartInit(PC_UART, uart_config);
 #endif
 
-    last = clock();
+    clock_init();
+    last = get_clock();
 }
 
 void pc_send(char * msg)
@@ -55,7 +56,7 @@ void pc_send(char * msg)
 void pc_periodic()
 {
     if (uart_q.len) {
-        float time_diff = 1000 * (float)(clock() - last) / CLOCKS_PER_SEC;
+        float time_diff = 1000 * (float)(get_clock() - last) / CLOCKS_PER_SECOND;
         if (time_diff >= PC_MIN_MS) {
             char msg[PC_MSG_LEN + 1]; // leave one byte for terminator
             mq_popfront(&uart_q, msg);
@@ -64,7 +65,7 @@ void pc_periodic()
 #else
             printf("PC: %s \n", msg);
 #endif
-            last = clock();
+            last = get_clock();
         }
     }
 }

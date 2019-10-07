@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#define ROCHI_DEBUG
+//#define ROCHI_DEBUG
 
 #ifdef ROCHI_DEBUG
 #define PC_MAX_FREQ 10

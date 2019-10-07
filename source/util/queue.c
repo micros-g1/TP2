@@ -4,7 +4,7 @@
 
 #include "queue.h"
 
-#define ROCHI_DEBUG
+//#define ROCHI_DEBUG
 
 #ifndef ROCHI_DEBUG
 #include "hardware.h"

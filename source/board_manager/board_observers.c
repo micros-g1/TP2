@@ -4,10 +4,12 @@
 
 #include "board_observers.h"
 
-#include <stdio.h>
 #include "../pc_interface/pc_interface.h"
 #include "board_can_network.h"
 
+#ifdef ROCHI_DEBUG
+#include <stdio.h>
+#endif
 
 
 #define MAX_MSG_SIZE    PC_MSG_LEN // one byte for id, one for angle type, one for sign, three for number
@@ -19,6 +21,7 @@
 
 void angle_to_string(int angle, char * str);
 int map_to_360(int angle);
+void print_angle(uint32_t angle, char * msg);
 
 
 void bo_init()
@@ -83,7 +86,7 @@ void angle_to_string(int angle, char * str)
         angle = (-angle);
     }
 
-    snprintf(&str[1], 4, "%03d", angle);
+    print_angle(angle, &str[1]);
 }
 
 int map_to_360(int angle)
@@ -94,4 +97,17 @@ int map_to_360(int angle)
     angle = angle <= 180 ? angle : angle-360;
     angle = sg ? angle : (-angle);
     return angle;
+}
+
+
+void print_angle(uint32_t angle, char * msg)
+{
+	uint32_t cent = angle/100;
+	uint32_t dec = (angle - cent*100)/10;
+	uint32_t units = angle - cent*100 - dec*10;
+
+	msg[0] = (uint8_t)cent + '0';
+	msg[1] = (uint8_t)dec + '0';
+	msg[2] = (uint8_t)units + '0';
+	msg[3] = '\0';
 }

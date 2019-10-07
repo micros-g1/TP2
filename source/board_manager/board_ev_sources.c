@@ -10,6 +10,7 @@
 #include "../Accelerometer/accelerometer.h"
 #include <math.h>
 #include "../util/vector_3d.h"
+#include "../util/clock.h"
 
 #define THRESHOLD	5
 
@@ -30,6 +31,7 @@ static clock_t last;
 
 void get_angles(int32_t * angles);
 void must_update_angles(ivector_t ang_end, ivector_t ang_start, bool * ans);
+int round2(double x);
 
 
 void be_init()
@@ -46,15 +48,16 @@ void be_init()
     // initialize magnetometer & accelerometer
 
     accel_init();
-
+    clock_init();
+    last = get_clock();
 }
 
 void be_periodic()
 {
     bn_periodic();
 
-    clock_t now = clock();
-    if (1000.0*(now - last)/(float)CLOCKS_PER_SEC >= ACC_MIN_MS) {
+    clock_t now = get_clock();
+    if (1000.0*(now - last)/(float)CLOCKS_PER_SECOND >= ACC_MIN_MS) {
         int32_t new_angles[N_ANGLE_TYPES];
         get_angles(new_angles);
         bool updates[N_ANGLE_TYPES];
@@ -117,15 +120,15 @@ void get_angles(int32_t * angles)
 
     if (fabs((double)u.y) >= 1 ) {
         u.y = (u.y > 0 ? 1 : -1); // restrict to [-1, 1]
-        angles[ORIENTATION] = -(int32_t)round(RAD2DEG(atan2((double)n.x, (double)e.x)));
+        angles[ORIENTATION] = -round2(RAD2DEG(atan2((double)n.x, (double)e.x)));
         angles[ROLL] = 0;
     }
     else {
-        angles[ORIENTATION] = -(int32_t)round(RAD2DEG(atan2(-(double)e.y, (double)n.y)));
-        angles[ROLL] = (int32_t)round(RAD2DEG(atan2(-(double)u.x, (double)u.z)));
+        angles[ORIENTATION] = -round2(RAD2DEG(atan2(-(double)e.y, (double)n.y)));
+        angles[ROLL] = round2(RAD2DEG(atan2(-(double)u.x, (double)u.z)));
     }
 
-    angles[PITCH] = (int32_t)round(RAD2DEG(asin((double)u.y)));
+    angles[PITCH] = round2(RAD2DEG(asin((double)u.y)));
 }
 
 
@@ -160,3 +163,14 @@ void must_update_angles(ivector_t ang_end, ivector_t ang_start, bool * ans)
         ans[0] = ans[1] = ans[2] = true;
     }
 }
+
+
+
+int round2(double x)
+{
+    if (x < 0.0)
+        return (int)(x - 0.5);
+    else
+        return (int)(x + 0.5);
+}
+
