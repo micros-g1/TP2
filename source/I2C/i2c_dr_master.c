@@ -9,16 +9,21 @@
 #include "MK64F12.h"
 #include "stdlib.h"
 #include "general.h"
+#include "board.h"
 
 #define I2C_CLK_FREQ	50000000
 
 i2c_service_callback_t interruption_callback[AMOUNT_I2C_DR_MOD] = {NULL, NULL, NULL};
 static I2C_Type* const i2c_dr_modules [AMOUNT_I2C_DR_MOD]= { I2C0, I2C1, I2C2 };
 static void clock_gating_mod(i2c_modules_dr_t mod);
+static void pin_config(int pin);
 
 void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	static bool initialized[AMOUNT_I2C_DR_MOD] = {false, false, false};
 	if(initialized[mod]) return;
+
+	pin_config(ACCEL_SCL_PIN);
+	pin_config(ACCEL_SDA_PIN);
 
 	clock_gating_mod(mod);
 
@@ -41,6 +46,7 @@ void i2c_dr_master_init(i2c_modules_dr_t mod, i2c_service_callback_t callback){
 	NVIC_EnableIRQ(irq_interrupts[mod]);	//enable the module interrupt.
 
 	i2c_dr_clear_startf(mod);
+	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
 	initialized[mod] = true;
 }
 static void clock_gating_mod(i2c_modules_dr_t mod){
@@ -226,6 +232,21 @@ void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
 }
 
+
+static void pin_config(int pin){
+	int port_num = PIN2PORT(pin);
+	int pin_num = PIN2NUM(pin);
+
+	PORT_Type * addr_array[] = PORT_BASE_PTRS;
+	PORT_Type * port = addr_array[port_num];
+
+	port->PCR[pin_num] = 0;
+	port->PCR[pin_num] |= PORT_PCR_MUX(5);
+	port->PCR[pin_num] |= 1 << PORT_PCR_ISF_SHIFT;
+	port->PCR[pin_num] |= PORT_PCR_ODE_MASK;
+	port->PCR[pin_num] |= PORT_PCR_PE_MASK;
+	port->PCR[pin_num] |= PORT_PCR_PS(1);
+}
 
 
 

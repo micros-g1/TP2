@@ -7,9 +7,7 @@
 
 
 #include "accelerometer.h"
-#include "board.h"
 #include "I2C/i2c_master_int.h"
-#include "MK64F12.h"
 #include "util/SysTick.h"
 
 #define ACCEL_ADDRESS	0x1D
@@ -42,8 +40,6 @@ static unsigned char reading_buffer[ACCEL_DATA_PACK_LEN];
 static accel_raw_data_t last_read_data_mag;
 static accel_raw_data_t last_read_data_acc;
 
-static void pin_config();
-
 static void handling_reading_calls();
 static void write_reg(unsigned char reg, unsigned char data);
 
@@ -54,11 +50,7 @@ void accel_init(){
 	bool initialized = false;
 	if(initialized) return;
 
-	pin_config(ACCEL_SCL_PIN);
-	pin_config(ACCEL_SDA_PIN);
 	i2c_master_int_init(I2C0_INT_MOD);
-
-	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
 
 	systick_init();
 
@@ -111,20 +103,6 @@ static accel_errors_t start(){
 	return I2C_OK;
 }
 
-static void pin_config(int pin){
-	int port_num = PIN2PORT(pin);
-	int pin_num = PIN2NUM(pin);
-
-	PORT_Type * addr_array[] = PORT_BASE_PTRS;
-	PORT_Type * port = addr_array[port_num];
-
-	port->PCR[pin_num] = 0;
-	port->PCR[pin_num] |= PORT_PCR_MUX(5);
-	port->PCR[pin_num] |= 1 << PORT_PCR_ISF_SHIFT;
-	port->PCR[pin_num] |= PORT_PCR_ODE_MASK;
-	port->PCR[pin_num] |= PORT_PCR_PE_MASK;
-	port->PCR[pin_num] |= PORT_PCR_PS(1);
-}
 
 
 static void handling_read(){

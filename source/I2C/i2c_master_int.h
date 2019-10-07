@@ -91,6 +91,7 @@ void i2c_master_int_write_data(i2c_module_id_int_t mod_id, unsigned char* write_
  */
 void i2c_master_int_set_slave_addr(i2c_module_id_int_t mod_id, unsigned char slave_add);
 
+
 /**
  * @brief I2C Master BUS is busy
  * @details Get the current status of the I2C BUS for a specific I2C module ( Busy or not)
