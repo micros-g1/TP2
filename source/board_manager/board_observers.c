@@ -62,7 +62,8 @@ void bo_notify_data(observer_t who, uint8_t board_id, angle_type_t angle_type, i
 
 void bo_notify_timeout(observer_t who, uint8_t board_id) {
     if (who == O_PC) {
-        char msg[3] = {'T', board_id + '0', '\0'};
+        char msg[PC_MSG_LEN+1] = {'T', board_id + '0'};
+        strcpy(&msg[2], "00000");
         pc_send(msg);
     }
 }

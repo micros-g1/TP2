@@ -32,8 +32,17 @@ void bn_init() {
     is_init = true;
     callback = NULL;
 #ifndef ROCHI_DEBUG
-    CAN_init(0, 0);
+    CAN_init();
+
+    can_filter_t filter;
+    filter.mask = 0x7F8;
+    filter.id = 0x100;
+    filter.frame_type = CAN_STANDARD_FRAME;
+    CAN_set_filter_config(filter);
+
+    CAN_start();
 #endif
+
     mq_init(&can_q);
 
     clock_init();
@@ -56,10 +65,10 @@ void bn_periodic()
 
 #ifndef ROCHI_DEBUG
             can_message_t msg;
-            msg.message_id = data[0] - '0'; // need actual ID number and not char
-            msg.fir.frame_type = CAN_STANDARD_FRAME;
-            msg.fir.rtr = 0;
-            msg.fir.dlc = strlen(&data)-1; // id will not be sent
+            msg.header.message_id = data[0] - '0' + 0x100; // need actual ID number and not char
+            msg.header.frame_type = CAN_STANDARD_FRAME;
+            msg.header.rtr = false;
+            msg.header.dlc = strlen(&data)-1; // id will not be sent
 
             strcpy(msg.data, &data[1]);
             // this will copy the terminator too, but because there is extra space this is not an issue
@@ -78,9 +87,9 @@ void bn_periodic()
         while (CAN_message_available()) {
             can_message_t msg;
             CAN_get(&msg);
-            if (msg.fir.dlc <= MAX_LEN_CAN_MSG) {
-                msg.data[msg.fir.dlc] = 0; // add terminator to data
-                callback(msg.message_id, msg.data);
+            if (msg.header.dlc <= MAX_LEN_CAN_MSG && !msg.header.rtr) {
+                msg.data[msg.header.dlc] = 0; // add terminator to data
+                callback(msg.header.message_id, msg.data);
             }
         }
 #else
