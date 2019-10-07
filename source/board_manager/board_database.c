@@ -144,21 +144,6 @@ void check_timeouts(board_t * board)
 }
 
 
-bool bd_newdata_any(uint8_t id)
-{
-    if (id >= N_MAX_BOARDS)
-        return false;
-
-    unsigned int i;
-    for (i = 0; i < N_ANGLE_TYPES; i++) {
-        if (boards[id].newData[i]) {
-            return true;
-        }
-    }
-    return false;
-}
-
-
 ev_db_t bd_newdata(uint8_t id)
 {
     ev_db_t ev = N_EVS_DB;

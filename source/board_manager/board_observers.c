@@ -6,6 +6,7 @@
 
 #include "../pc_interface/pc_interface.h"
 #include "board_can_network.h"
+#include <string.h>
 
 #ifdef ROCHI_DEBUG
 #include <stdio.h>

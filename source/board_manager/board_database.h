@@ -82,7 +82,10 @@ int32_t bd_get_angle(uint8_t id, angle_type_t angle_type);
 bool bd_is_ok(uint8_t id);
 
 /**
-bool bd_newdata_any(uint8_t id);
+ * @brief Check whether any new data is available for a given board
+ * @param id Board ID
+ * @return Last event, N_EV_TYPES if no new events available
+ */
 ev_db_t bd_newdata(uint8_t id);
 
 
