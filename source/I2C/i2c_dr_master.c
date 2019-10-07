@@ -214,9 +214,7 @@ void i2c_dr_clear_startf(i2c_modules_dr_t mod){
 	/*STARTF -- see i2c_dr_get_startf for more information
 	*The STARTF bit must be cleared by writing 1 to it.
 	*/
-//	I2C_FLT_FLT_MASK
 	i2c_dr_modules[mod]->FLT |= I2C_FLT_STARTF(1);
-//	(i2c_dr_modules[mod]->FLT) |= 1UL << 4;
 }
 
 bool i2c_dr_get_stopf(i2c_modules_dr_t mod){
@@ -228,10 +226,6 @@ void i2c_dr_clear_stopf(i2c_modules_dr_t mod){
 	(i2c_dr_modules[mod]->FLT) |= 1UL << 6;
 }
 
-void i2c_dr_set_fack(i2c_modules_dr_t mod, bool enabled){
-	unsigned char reg = ((I2C_Type*) I2C0_BASE)->SMB;
-	(i2c_dr_modules[mod]->SMB) ^= (-(unsigned char)enabled ^ reg) & (1UL << 7);
-}
 
 
 
