@@ -31,8 +31,8 @@ uint32_t clock_gating_masks[UART_N_IDS] = { SIM_SCGC4_UART0_MASK, SIM_SCGC4_UART
 
 
 
-static volatile queue_t tx_q[UART_N_IDS];
-static volatile queue_t rx_q[UART_N_IDS];
+static queue_t tx_q[UART_N_IDS];
+static queue_t rx_q[UART_N_IDS];
 
 
 void uart_irq_handler(uint8_t id);
@@ -141,7 +141,7 @@ uint8_t uartGetRxMsgLength(uint8_t id)
 }
 
 
-uint8_t uartReadMsg(uint8_t id, char* msg, uint8_t cant)
+uint8_t uartReadMsg(uint8_t id, uint8_t* msg, uint8_t cant)
 {
 	uint8_t i = 0;
 	while (i < cant && rx_q[id].len) {
@@ -151,7 +151,7 @@ uint8_t uartReadMsg(uint8_t id, char* msg, uint8_t cant)
 	return i;
 }
 
-uint8_t uartWriteMsg(uint8_t id, const char* msg, uint8_t cant)
+uint8_t uartWriteMsg(uint8_t id, const uint8_t * msg, uint8_t cant)
 {
 	uint8_t i = 0;
 	while (i < cant && !q_isfull(&rx_q[id])) {
@@ -188,7 +188,7 @@ void uart_periodic(void)
 
 
 
-void uart_putchar (UART_Type * channel, char ch)
+void uart_putchar (UART_Type * channel, uint8_t ch)
 {
 	/* Wait until space is available in the FIFO */
 	while(!(channel->S1 & UART_S1_TDRE_MASK));
@@ -196,7 +196,7 @@ void uart_putchar (UART_Type * channel, char ch)
 	channel->D = (uint8_t)ch;
 }
 
-char uart_getchar (UART_Type * channel)
+uint8_t uart_getchar (UART_Type * channel)
 {
 	/* Wait until character has been received */
 	while (!(channel->S1 & UART_S1_RDRF_MASK));
@@ -212,8 +212,9 @@ int uart_getchar_present (UART_Type * channel)
 
 void uart_irq_handler(uint8_t id)
 {
-	uint8_t tmp=uarts[id]->S1; // Read Status (necessary to clear interrupt request)
-	q_pushback(&rx_q[id], uarts[id]->D);
+	uint8_t data =uarts[id]->S1; // Read Status (necessary to clear interrupt request)
+	data = uarts[id]->D;
+	q_pushback(&rx_q[id], data);
 }
 
 __ISR__ UART0_RX_TX_IRQHandler (void)

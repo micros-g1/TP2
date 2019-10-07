@@ -19,7 +19,7 @@
 #define MAX2(a,b)   ((a)>(b) ? (a) : (b))
 #define MAX3(a,b,c) MAX2( (a), MAX2((b), (c)) )
 
-void can_callback(uint8_t msg_id, char * can_data);
+void can_callback(uint8_t msg_id, uint8_t * can_data);
 
 static int32_t curr_angles[N_ANGLE_TYPES];
 static clock_t last;
@@ -81,7 +81,7 @@ void be_periodic()
 
 }
 
-void can_callback(uint8_t msg_id, char * can_data)
+void can_callback(uint8_t msg_id, uint8_t * can_data)
 {
     if (can_data != NULL)
     {
@@ -97,7 +97,7 @@ void can_callback(uint8_t msg_id, char * can_data)
             }
 
             if (type <= N_ANGLE_TYPES) {
-                char * end;
+                uint8_t * end;
                 int32_t value = (int32_t)strtol(&can_data[1], &end, 10);
                 if (end[0] == 0) {
                     bd_update(msg_id, type, value);

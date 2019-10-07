@@ -19,9 +19,9 @@
 
 
 
-void angle_to_string(int angle, char * str);
+void angle_to_string(int angle, uint8_t * str);
 int map_to_360(int angle);
-void print_angle(uint32_t angle, char * msg);
+void print_angle(uint32_t angle, uint8_t * msg);
 
 
 void bo_init()
@@ -40,7 +40,7 @@ void bo_notify_data(observer_t who, uint8_t board_id, angle_type_t angle_type, i
     if (who >= N_OBSERVERS || angle_type >= N_ANGLE_TYPES)
         return;
 
-    char msg[MAX_MSG_SIZE + 2]; // leave one byte for '\0' and one for package type
+    uint8_t msg[MAX_MSG_SIZE + 2]; // leave one byte for '\0' and one for package type
     msg[0] = 'D';
     msg[1] = board_id + '0'; // convert to char so 0 is not interpreted as terminator
 
@@ -62,7 +62,7 @@ void bo_notify_data(observer_t who, uint8_t board_id, angle_type_t angle_type, i
 
 void bo_notify_timeout(observer_t who, uint8_t board_id) {
     if (who == O_PC) {
-        char msg[PC_MSG_LEN+1] = {'T', board_id + '0'};
+        uint8_t msg[PC_MSG_LEN+1] = {'T', board_id + '0'};
         strcpy(&msg[2], "00000");
         pc_send(msg);
     }
@@ -76,7 +76,7 @@ void bo_periodic() {
 
 
 
-void angle_to_string(int angle, char * str)
+void angle_to_string(int angle, uint8_t * str)
 {
     angle = map_to_360(angle);
     if (angle >= 0) {
@@ -101,7 +101,7 @@ int map_to_360(int angle)
 }
 
 
-void print_angle(uint32_t angle, char * msg)
+void print_angle(uint32_t angle, uint8_t * msg)
 {
 	uint32_t cent = angle/100;
 	uint32_t dec = (angle - cent*100)/10;

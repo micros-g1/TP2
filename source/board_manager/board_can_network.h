@@ -15,7 +15,7 @@
 #else
 #define CAN_MAX_FREQ    1
 #endif
-typedef void (*bn_callback_t )(uint8_t msg_id, char * can_data);
+typedef void (*bn_callback_t )(uint8_t msg_id, uint8_t * can_data);
 
 
 void bn_init();
@@ -24,7 +24,7 @@ void bn_register_callback(bn_callback_t cb);
 
 void bn_periodic();
 
-void bn_send(uint8_t msg_id, char * data);
+void bn_send(uint8_t msg_id, uint8_t * data);
 
 
 #endif //TP2_BOARD_CAN_NETWORK_H

@@ -73,7 +73,7 @@ uint8_t uartGetRxMsgLength(uint8_t id);
  * @param cant Desired quantity of bytes to be pasted
  * @return Real quantity of pasted bytes
 */
-uint8_t uartReadMsg(uint8_t id, char* msg, uint8_t cant);
+uint8_t uartReadMsg(uint8_t id, uint8_t* msg, uint8_t cant);
 
 /**
  * @brief Write a message to be transmitted. Non-Blocking
@@ -82,7 +82,7 @@ uint8_t uartReadMsg(uint8_t id, char* msg, uint8_t cant);
  * @param cant Desired quantity of bytes to be transferred
  * @return Real quantity of bytes to be transferred
 */
-uint8_t uartWriteMsg(uint8_t id, const char* msg, uint8_t cant);
+uint8_t uartWriteMsg(uint8_t id, const uint8_t* msg, uint8_t cant);
 
 /**
  * @brief Check if all bytes were transfered
@@ -96,8 +96,8 @@ bool uartIsTxMsgComplete(uint8_t id);
 ////////////////////////
 // BLOCKING FUNCTIONS //
 ////////////////////////
-void uart_putchar (UART_Type * channel, char ch);
-char uart_getchar (UART_Type * channel);
+void uart_putchar (UART_Type * channel, uint8_t ch);
+uint8_t uart_getchar (UART_Type * channel);
 int uart_getchar_present (UART_Type * channel);
 
 

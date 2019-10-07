@@ -19,7 +19,7 @@
 
 
 void pc_init();
-void pc_send(char * data);
+void pc_send(uint8_t * data);
 void pc_periodic(); // so it can send any messages it has on queue
 
 

@@ -23,7 +23,7 @@
 #define Q_MSG_LEN 7 // without terminator
 
 typedef struct {
-    volatile char buffer[Q_MAX_LENGTH][Q_MSG_LEN+1]; //leave one byte for terminator
+    uint8_t buffer[Q_MAX_LENGTH][Q_MSG_LEN+1]; //leave one byte for terminator
     volatile uint32_t len;				//Keeps track of queue length
     volatile uint32_t in;					//Offset for adding next data
     volatile uint32_t out;				//Offset for reading next data
@@ -34,15 +34,15 @@ typedef struct {
 void mq_init(msg_queue_t * q);
 
 //Wait for data. Can only be used by main loop.
-void mq_read_blocking(msg_queue_t * q, char * data);
+void mq_read_blocking(msg_queue_t * q, uint8_t * data);
 //Flush queue. Can only be used by main loop.
 void mq_flush(msg_queue_t * q);
 //Add data to queue. True if event queue was not full
-bool mq_pushback(msg_queue_t * q, char * data);
-bool mq_pushfront(msg_queue_t * q, char * data);
+bool mq_pushback(msg_queue_t * q, uint8_t * data);
+bool mq_pushfront(msg_queue_t * q, uint8_t * data);
 
 //Get current queue length.
-void mq_popfront(msg_queue_t * q, char * data); // will return 0 if queue empty, but also if data is 0. check length first!
+void mq_popfront(msg_queue_t * q, uint8_t * data); // will return 0 if queue empty, but also if data is 0. check length first!
 unsigned int mq_length(msg_queue_t * q);
 bool mq_isfull(msg_queue_t * q);
 

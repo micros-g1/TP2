@@ -60,7 +60,7 @@ void bn_periodic()
     if (can_q.len) {
         float ms_elapsed = 1000.0*(get_clock()-last)/CLOCKS_PER_SECOND;
         if (ms_elapsed >= CAN_MIN_MS) {
-            char data[MAX_LEN_CAN_MSG + 2]; // one byte for terminator, one for id
+            uint8_t data[MAX_LEN_CAN_MSG + 2]; // one byte for terminator, one for id
             mq_popfront(&can_q, data);
 
 #ifndef ROCHI_DEBUG
@@ -68,7 +68,7 @@ void bn_periodic()
             msg.header.message_id = data[0] - '0' + 0x100; // need actual ID number and not char
             msg.header.frame_type = CAN_STANDARD_FRAME;
             msg.header.rtr = false;
-            msg.header.dlc = strlen(&data)-1; // id will not be sent
+            msg.header.dlc = strlen(data)-1; // id will not be sent
 
             strcpy(msg.data, &data[1]);
             // this will copy the terminator too, but because there is extra space this is not an issue
@@ -98,9 +98,9 @@ void bn_periodic()
     }
 }
 
-void bn_send(uint8_t msg_id, char * data)
+void bn_send(uint8_t msg_id, uint8_t * data)
 {
-    char buffer[MAX_LEN_CAN_MSG + 2];
+    uint8_t buffer[MAX_LEN_CAN_MSG + 2];
     buffer[0] = msg_id;
     strcpy(&buffer[1], data);
     mq_pushback(&can_q, buffer);

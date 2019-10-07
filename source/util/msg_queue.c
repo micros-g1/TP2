@@ -18,7 +18,7 @@ void mq_init(msg_queue_t * q)
 
 
 //Wait for data
-void mq_read_blocking(msg_queue_t * q, char * data)
+void mq_read_blocking(msg_queue_t * q, uint8_t * data)
 {
     //Atomic operation (assembly)
     while(q->len == 0) {;} // wait for data
@@ -46,7 +46,7 @@ void mq_flush(msg_queue_t * q)
 }
 
 //Add data to queue
-bool mq_pushback(msg_queue_t * q, char * data)
+bool mq_pushback(msg_queue_t * q, uint8_t * data)
 {
     bool ret_val = false;
 #ifndef ROCHI_DEBUG
@@ -70,7 +70,7 @@ bool mq_pushback(msg_queue_t * q, char * data)
 
 
 //Add data to queue
-bool mq_pushfront(msg_queue_t * q, char * data)
+bool mq_pushfront(msg_queue_t * q, uint8_t * data)
 {
     bool ret_val = false;
 
@@ -109,7 +109,7 @@ bool mq_isfull(msg_queue_t * q)
 
 
 
-void mq_popfront(msg_queue_t * q, char * data)
+void mq_popfront(msg_queue_t * q, uint8_t * data)
 {
    if (q->len) {
         q->len--;

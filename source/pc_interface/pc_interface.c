@@ -47,7 +47,7 @@ void pc_init()
     last = get_clock();
 }
 
-void pc_send(char * msg)
+void pc_send(uint8_t * msg)
 {
     mq_pushback(&uart_q, msg);
     pc_periodic(); // see if i can send it right now
@@ -58,7 +58,7 @@ void pc_periodic()
     if (uart_q.len) {
         float time_diff = 1000 * (float)(get_clock() - last) / CLOCKS_PER_SECOND;
         if (time_diff >= PC_MIN_MS) {
-            char msg[PC_MSG_LEN + 1]; // leave one byte for terminator
+            uint8_t msg[PC_MSG_LEN + 1]; // leave one byte for terminator
             mq_popfront(&uart_q, msg);
 #ifndef ROCHI_DEBUG
             uartWriteMsg(PC_UART, msg, PC_MSG_LEN);
