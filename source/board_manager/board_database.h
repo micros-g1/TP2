@@ -1,5 +1,5 @@
 /***************************************************************************//**
-  @file     board_manager.h
+  @file     board_database.h
   @brief    ...
   @author   Rocio Parra
  ******************************************************************************/
@@ -35,7 +35,7 @@
 typedef enum {NEW_PITCH, NEW_ROLL, NEW_ORIENTATION, NEW_TIMEOUT, N_EVS_DB} ev_db_t;
 
 #if NEW_PITCH != PITCH || NEW_ROLL != ROLL || NEW_ORIENTATION != ORIENTATION
-#error angles must have the same order as in board_types.h!!
+#error angles must be in the same order as in board_types.h!!
 #endif
 /*******************************************************************************
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
@@ -77,10 +77,11 @@ int32_t bd_get_angle(uint8_t id, angle_type_t angle_type);
 /**
  * @brief Check whether a certain ID corresponds to a current valid board
  * @param id: Board ID
- * @return False: the board was disconnected or never initialized, or ID is not valid
+ * @return False: the board is timed out or was never initialized, or ID is not valid
  */
 bool bd_is_ok(uint8_t id);
 
+/**
 bool bd_newdata_any(uint8_t id);
 ev_db_t bd_newdata(uint8_t id);
 
