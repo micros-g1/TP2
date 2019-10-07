@@ -582,8 +582,8 @@ typedef enum
 	PHSEG1_0	=	0x08,		///< @brief PS1 Length bit 0 Mask
 	PHSEG1_1	=	0x10,		///< @brief PS1 Length bit 1 Mask
 	PHSEG1_2	=	0x20,		///< @brief PS1 Length bit 2 Mask
-	SAM			=	0x08,		///< @brief Wake-up Filter bit Mask
-	BLTMODE		=	0x10		///< @brief Start-of-Frame Signal bit Mask
+	SAM			=	0x40,		///< @brief Wake-up Filter bit Mask
+	BLTMODE		=	0x80		///< @brief Start-of-Frame Signal bit Mask
 }mcp25625_cnf2_mask_t;
 
 /**
@@ -1405,5 +1405,14 @@ void mcp25625_driver_set_callback(mcp25625_driver_callback_t callback);
  * @param true if interrupt requested.
  */
 bool mcp25625_get_IRQ_flag(void);
+
+/**
+ * @brief enable / disable interrupt handling
+ * @details interrupt handling is activated on initialization.
+ * This function must be used in order to temporally
+ * deactivate interrupts in order to modify shared variables.
+ * @param true if must enable interrupt handling
+ */
+void mcp25625_driver_enable_interrupt_handling(bool enabled);
 
 #endif /* CAN_MCP25625_MCP25625_DRIVER_H_ */

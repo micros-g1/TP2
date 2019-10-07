@@ -26,7 +26,7 @@
 #define ACCEL_SCL_PIN	PORTNUM2PIN(PE, 24u)
 #define ACCEL_SDA_PIN	PORTNUM2PIN(PE, 25u)
 
-#define MCP25625_INTREQ_PIN	PORTNUM2PIN(PC, 12)
+#define MCP25625_INTREQ_PIN	PORTNUM2PIN(PD, 0)
 
 /*******************************************************************************
  ******************************************************************************/
