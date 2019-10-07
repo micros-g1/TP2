@@ -63,8 +63,9 @@ void accel_init(){
 	systick_init();
 
 	while(start() == I2C_ERROR);
-	systick_add_callback(handling_reading, 10, PERIODIC);			//more than 800 Hz!!!
-	systick_add_callback(handling_reading_calls, 20, PERIODIC);		//800 Hz!!!
+
+	systick_add_callback(handling_reading, SYSTICK_HZ_TO_RELOAD(800), PERIODIC);			//800 Hz or more!!!
+	systick_add_callback(handling_reading_calls, SYSTICK_HZ_TO_RELOAD(200), PERIODIC);		//less than 800 Hz!!!
 
 	initialized = true;
 

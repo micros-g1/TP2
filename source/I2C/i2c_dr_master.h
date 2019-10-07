@@ -5,10 +5,8 @@
  * @brief I2C Master Driver
  * @details
  * I2C Driver
- * This driver is prepared to
- * handle the communication with the magnetometer of the freedom board
+ * This driver should be used for the pin control of I2C master modules of the MK64F.
  * there are many unhandled cases (this is not a generic i2c master driver as it does not handle multimaster!!)
- * Although not all multimaster cases are handled, some of them may be implemented for future upgrades/implementations.
  */
 
 #ifndef I2C_I2C_DR_MASTER_H_
@@ -17,7 +15,7 @@
 
 /**
  * @typedef enum i2c_modules_dr_t
- * @brief I2C interface modules
+ * @brief I2C interface modules.
  */
 typedef enum {I2C0_DR_MOD, I2C1_DR_MOD, I2C2_DR_MOD, AMOUNT_I2C_DR_MOD} i2c_modules_dr_t;
 
@@ -136,27 +134,52 @@ bool i2c_dr_get_startf(i2c_modules_dr_t mod);
 /**
  * @brief I2C clear start interrupt flag
  * @details Clears the startf interrupt flag, see also i2c_dr_get_startf() .
+ * @param mod : I2C module that should clear its starf flag.
  */
 void i2c_dr_clear_startf(i2c_modules_dr_t mod);
 
 /**
  * @brief I2C Get the current status of the stop interrupt flag
  * @details I2C Gets the current status of the stop interrupt flag.
+ * @param mod : I2C module to get the flag status from.
  * @return *true* if the flag is set, *false* otherwise.
  */
 bool i2c_dr_get_stopf(i2c_modules_dr_t mod);
 /**
  * @brief I2C clear stop interrupt flag
  * @details Clears the stopf interrupt flag, see also i2c_dr_get_stopf() .
+ * @param mod : I2C module that should clear its stopf flag.
  */
 void i2c_dr_clear_stopf(i2c_modules_dr_t mod);
 
-
+/**
+ * @brief I2C send an ACK or NACK signal
+ * @details Sends an ACK or NACK signal if the timing of that ACK/NACK is correct.
+ * @param mod : I2C module that should send the ACK/NACK signal.
+ * @param ack_value : *true* to send NACK, *false* to send ACK.
+ *
+ */
 void i2c_dr_send_ack(i2c_modules_dr_t mod, bool ack_value);
 
+/**
+ * @brief I2C get Master/Slave status.
+ * @details Gets the current status of the I2C module. Slave (no START signal has been send by the module)
+ * or Master.
+ * @param mod : I2C module to get the current status from
+ * @return *true* for MASTER mode. *false* for Slave mode.
+ */
 bool  i2c_dr_get_mst(i2c_modules_dr_t mod);
-void i2c_dr_set_fack(i2c_modules_dr_t mod, bool enabled);
 
+/**
+ * @brief I2C BUS is busy
+ * @details Check the status of the bus BUSY flag.
+ * IMPORTANT : This flag does not update immediately after a start signal has been been detected on the bus,
+ * so, in case the user wants to keep updated in real on the state of the bus,
+ * he/she/it/Apache Helicopter should implement a software layer that either sets a small delay after sending a start signal
+ * or solves this problem in any other way.
+ * @param mod : I2C module to get the bus status from.
+ * @return *true* if the bus is busy. *false* otherwise.
+ */
 bool i2c_dr_bus_busy(i2c_modules_dr_t mod);
 
 #endif /* I2C_I2C_DR_MASTER_H_ */
