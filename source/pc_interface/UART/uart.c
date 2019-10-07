@@ -12,7 +12,7 @@
 #include "gpio.h"
 
 #include "util/queue.h"
-#include "util/Systick.h"
+#include "util/SysTick.h"
 
 UART_Type * uarts[UART_N_IDS] = {UART0, UART1, UART2, UART3, UART4};
 bool uart_active[UART_N_IDS] = {false, false, false, false, false};
