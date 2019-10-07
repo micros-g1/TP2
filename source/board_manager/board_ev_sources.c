@@ -24,7 +24,7 @@ void can_callback(uint8_t msg_id, uint8_t * can_data);
 static int32_t curr_angles[N_ANGLE_TYPES];
 static clock_t last;
 
-#define ACC_MAX_FREQ    100
+#define ACC_MAX_FREQ    20
 #define ACC_MIN_MS      (1000.0/ACC_MAX_FREQ)
 
 

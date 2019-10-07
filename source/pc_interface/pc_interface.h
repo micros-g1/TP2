@@ -22,7 +22,7 @@
 #ifdef ROCHI_DEBUG
 #define PC_MAX_FREQ 10
 #else
-#define PC_MAX_FREQ 40 // 60 frames per second is the fastest ppl will notice so no point in going any faster
+#define PC_MAX_FREQ 100 // 60 frames per second is the fastest ppl will notice so no point in going any faster
 #endif
 
 #define PC_MSG_LEN  7  // one byte for pckg type, one for id, one for angle type, one for sign, three for number
