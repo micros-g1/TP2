@@ -22,7 +22,7 @@
 
 #ifndef ROCHI_DEBUG
 #define ANGLE_TIMEOUT_MS    1000    // external boards are considered 'dead' after this time without new data
-#define BA_UPDATE_MS        500     // resend angles from internal boards after this time has elapsed
+#define BA_UPDATE_MS        900     // resend angles from internal boards after this time has elapsed
 #else
 #define ANGLE_TIMEOUT_MS    10000    // external boards are considered 'dead' after this time without new data
 #define BA_UPDATE_MS        5000     // resend angles from internal boards after this time has elapsed

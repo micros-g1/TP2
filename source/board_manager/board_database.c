@@ -69,7 +69,7 @@ void bd_add_board(uint8_t id, bool internal) {
         for (i = 0; i < N_ANGLE_TYPES; i++){
             boards[id].newData[i] = true;
             boards[id].angles[i] = 0;
-            boards[id].timed_out[i] = true; // these will all be true til data is updated
+            boards[id].timed_out[i] = !internal; // these will all be true til data is updated
             boards[id].last_update[i] = now;
         }
         boards[id].id = id;  // this will not be used, set for consistency
@@ -120,11 +120,12 @@ void check_timeouts(board_t * board)
     unsigned int i, n = board->orientationData ? N_ANGLE_TYPES : N_ANGLE_TYPES - 1;
     for (i = 0; i < n; i++) {
         if (!board->timed_out[i]) { // no point in checking if it was already timed out
-            float ms_elapsed = (now - board->last_update[i]) * 1000.0 / CLOCKS_PER_SECOND;
+            float ms_elapsed = ((float)(now - board->last_update[i])) * 1000.0 / (float)CLOCKS_PER_SECOND;
 
             if (board->internal) {
                 if (ms_elapsed >= BA_UPDATE_MS) {
                     board->newData[i] = true; // must resend data so other boards dont think im dead
+                    board->last_update[i] = now;
                 }
             } else if (ms_elapsed >= ANGLE_TIMEOUT_MS) {
                 board->timed_out[i] = true;

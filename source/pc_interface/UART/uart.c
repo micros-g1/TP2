@@ -124,7 +124,7 @@ void uartInit (uint8_t id, uart_cfg_t config){
 	}
 
 	systick_init();
-	systick_add_callback(uart_periodic, SYSTICK_HZ_TO_RELOAD(80), PERIODIC);
+	systick_add_callback(uart_periodic, SYSTICK_HZ_TO_RELOAD(100), PERIODIC);
 	uart_active[id] = true;
 }
 
@@ -154,7 +154,7 @@ uint8_t uartReadMsg(uint8_t id, uint8_t* msg, uint8_t cant)
 uint8_t uartWriteMsg(uint8_t id, const uint8_t * msg, uint8_t cant)
 {
 	uint8_t i = 0;
-	while (i < cant && !q_isfull(&rx_q[id])) {
+	while (i < cant && !q_isfull(&tx_q[id])) {
 		q_pushback(&tx_q[id], msg[i]);
 		i++;
 	}

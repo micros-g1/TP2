@@ -43,11 +43,11 @@ static accel_raw_data_t last_read_data_mag;
 static accel_raw_data_t last_read_data_acc;
 
 static void pin_config();
-static void handling_reading();
+
 static void handling_reading_calls();
 static void write_reg(unsigned char reg, unsigned char data);
 
-
+static void handling_read();
 static accel_errors_t start();
 
 void accel_init(){
@@ -63,8 +63,8 @@ void accel_init(){
 	systick_init();
 
 	while(start() == I2C_ERROR);
-//	systick_add_callback(handling_reading, SYSTICK_HZ_TO_RELOAD(10), PERIODIC);			//more than 800 Hz!!!
-//	systick_add_callback(handling_reading_calls, SYSTICK_HZ_TO_RELOAD(20), PERIODIC);		//800 Hz!!!
+	systick_add_callback(handling_read, SYSTICK_HZ_TO_RELOAD(40), PERIODIC);			//more than 800 Hz!!!
+	systick_add_callback(handling_reading_calls, SYSTICK_HZ_TO_RELOAD(10), PERIODIC);		//800 Hz!!!
 
 	initialized = true;
 
@@ -127,8 +127,8 @@ static void pin_config(int pin){
 }
 
 
-static void handling_reading(){
-	systick_disable_callback(handling_reading_calls);		//cant try to read now because that will empty the buffer!!!
+static void handling_read(){
+//	systick_disable_callback(handling_reading_calls);		//cant try to read now because that will empty the buffer!!!
 
 	//reads the last ACC_DATA_PACK_LEN (exactly!!) amount of bytes from the i2c master buffer.
 	while(i2c_master_int_has_new_data(I2C0_INT_MOD) && (i2c_master_int_get_new_data_length(I2C0_INT_MOD) >= ACCEL_DATA_PACK_LEN)){
@@ -141,20 +141,20 @@ static void handling_reading(){
 		last_read_data_acc.z = (int16_t)((reading_buffer[5] << 8) | reading_buffer[6])>> 2;
 
 		//magnetometer data : serial... 16 bits
-		last_read_data_acc.x = (reading_buffer[7] << 8) | reading_buffer[8];
-		last_read_data_acc.y = (reading_buffer[9] << 8) | reading_buffer[10];
-		last_read_data_acc.z = (reading_buffer[11] << 8) | reading_buffer[12];
+		last_read_data_mag.x = (reading_buffer[7] << 8) | reading_buffer[8];
+		last_read_data_mag.y = (reading_buffer[9] << 8) | reading_buffer[10];
+		last_read_data_mag.z = (reading_buffer[11] << 8) | reading_buffer[12];
 	}
-	systick_enable_callback(handling_reading_calls);		//can now try to read
+//	systick_enable_callback(handling_reading_calls);		//can now try to read
 }
 
 static void handling_reading_calls(){
 
 	unsigned char read_addr = ACCEL_STATUS;
 	if(!i2c_master_int_bus_busy(I2C0_INT_MOD)){
-		systick_disable_callback(handling_reading);		//cant update data while reading it!
+		systick_disable_callback(handling_read);		//cant update data while reading it!
 		i2c_master_int_read_data(I2C0_INT_MOD, &read_addr, 1, ACCEL_DATA_PACK_LEN);
-		systick_enable_callback(handling_reading);		//can now update data if necessary
+		systick_enable_callback(handling_read);		//can now update data if necessary
 	}
 }
 
@@ -166,14 +166,14 @@ static void write_reg(unsigned char reg, unsigned char data){
 accel_raw_data_t accel_get_last_data(accel_data_options_t data_option){
 	accel_raw_data_t returnable;
 
-	systick_disable_callback(handling_reading);		//cant update data while reading it!
+//	systick_disable_callback(handling_reading);		//cant update data while reading it!
 
 	if(data_option == ACCEL_ACCEL_DATA)
 		returnable = last_read_data_acc;
 	else if(data_option == ACCEL_MAGNET_DATA)
 		returnable = last_read_data_mag;
 
-	systick_enable_callback(handling_reading);		//can now update data if necessary
+//	systick_enable_callback(handling_reading);		//can now update data if necessary
 
 	return returnable;
 }

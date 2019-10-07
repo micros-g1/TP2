@@ -54,15 +54,11 @@ bool q_pushback(queue_t * q, uint8_t data)
 #ifndef ROCHI_DEBUG
     hw_DisableInterrupts();
 #endif
-
-    if(q->len != Q_MAX_LENGTH)
-    {
-        q->buffer[q->in++] = data;
-        if(q->in == Q_MAX_LENGTH)
-            q->in = 0;
-        q->len++;
-        ret_val = true;
-    }
+    q->buffer[q->in++] = data;
+    if(q->in == Q_MAX_LENGTH)
+        q->in = 0;
+    q->len = q->len <= Q_MAX_LENGTH? q->len+1 : Q_MAX_LENGTH;
+    ret_val = true;
 
 #ifndef ROCHI_DEBUG
     hw_EnableInterrupts();

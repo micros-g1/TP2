@@ -75,6 +75,7 @@ void be_periodic()
         for (i = 0; i < N_ANGLE_TYPES; i++) {
         	if (updates[i]) {
         		bd_update(1, i, new_angles[i]);
+        		curr_angles[i] = new_angles[i];
         	}
         }
     }
@@ -164,7 +165,7 @@ void must_update_angles(ivector_t ang_end, ivector_t ang_start, bool * ans)
     ans[2] = abs(diff.z) >= THRESHOLD;
 
     ivector_t sum = iv_add(ang_start, diff);
-    if (sum.x == ang_end.x && sum.y == ang_end.y && sum.z == ang_end.z) {
+    if (!(sum.x == ang_end.x && sum.y == ang_end.y && sum.z == ang_end.z)) {
         ans[0] = ans[1] = ans[2] = true;
     }
 }

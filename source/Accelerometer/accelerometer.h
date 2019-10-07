@@ -22,9 +22,9 @@ typedef enum {ACCEL_ACCEL_DATA, ACCEL_MAGNET_DATA} accel_data_options_t;
  * @brief Data Types: Accelerometer or Magnetometer
  */
 typedef struct {
-	int x;
-	int y;
-	int z;
+	int16_t x;
+	int16_t y;
+	int16_t z;
 } accel_raw_data_t;
 
 /**

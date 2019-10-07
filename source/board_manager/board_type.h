@@ -20,9 +20,9 @@
 //#define ROCHI_DEBUG // debugging
 
 // standard angle type coding for external messages
-#define PITCH_CHAR  'c'
-#define ROLL_CHAR   'r'
-#define OR_CHAR     'o'
+#define PITCH_CHAR  'C'
+#define ROLL_CHAR   'R'
+#define OR_CHAR     'O'
 
 
 /*******************************************************************************

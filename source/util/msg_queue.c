@@ -53,15 +53,13 @@ bool mq_pushback(msg_queue_t * q, uint8_t * data)
     hw_DisableInterrupts();
 #endif
 
-    if(q->len != Q_MAX_LENGTH)
-    {
-        data[Q_MSG_LEN]=0; // assure there is a terminator
-        strcpy(q->buffer[q->in++], data);
-        if(q->in == Q_MAX_LENGTH)
-            q->in = 0;
-        q->len++;
-        ret_val = true;
+    data[Q_MSG_LEN]=0; // assure there is a terminator
+    strcpy(q->buffer[q->in++], data);
+    if(q->in == Q_MAX_LENGTH) {
+        q->in = 0;
     }
+    q->len = q->len <= Q_MAX_LENGTH ? q->len+1 : Q_MAX_LENGTH;
+    ret_val = true;
 #ifndef ROCHI_DEBUG
     hw_EnableInterrupts();
 #endif
@@ -77,16 +75,14 @@ bool mq_pushfront(msg_queue_t * q, uint8_t * data)
 #ifndef ROCHI_DEBUG
     hw_DisableInterrupts();
 #endif
-    if(q->len != Q_MAX_LENGTH) {
-        if(q->out == 0) {
-            q->out = Q_MAX_LENGTH;
-        }
-        data[Q_MSG_LEN] = 0;
-        q->out--;
-        strcpy(q->buffer[q->out], data);
-        q->len++;
-        ret_val = true;
+    if(q->out == 0) {
+        q->out = Q_MAX_LENGTH;
     }
+    data[Q_MSG_LEN] = 0;
+    q->out--;
+    strcpy(q->buffer[q->out], data);
+    q->len++;
+    ret_val = true;
 #ifndef ROCHI_DEBUG
 
     hw_EnableInterrupts();

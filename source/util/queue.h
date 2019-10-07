@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 //Total number of elements that event queue can hold
-#define Q_MAX_LENGTH	256
+#define Q_MAX_LENGTH	1000
 
 typedef struct {
 	volatile uint8_t buffer[Q_MAX_LENGTH];
