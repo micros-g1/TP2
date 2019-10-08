@@ -1,10 +1,7 @@
 /**
- * @file SPI_driver.h
+ * @file spi_driver.h
  * @author Grupo 1 Labo de Micros
  * @date 25 Sep 2019
- * @details
- * Todavia no tengo nada. Saludos
- * @see https://www.youtube.com/watch?v=dQw4w9WgXcQ
  */
 
 #include <stdint.h>
@@ -31,6 +28,15 @@ typedef enum{
  * set of configurations
  */
 void spi_driver_init(void);
+
+/**
+ * @brief SPI transfer function
+ * @details implements the transfer of the specified bytes.
+ * @param tx_data pointer to de data to transfer
+ * @param rx_data pointer to the array where the received data is to be saved
+ * @param length length of the data to be sent
+ */
+
 void spi_master_transfer_blocking(uint8_t * tx_data, uint8_t * rx_data, size_t length);
 // CTAR CONFIG
 void spi_set_double_baud_rate(bool double_br);
