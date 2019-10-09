@@ -1,0 +1,37 @@
+Problema:
+*Roll-over on, se envia un mensaje, se llenan los dos buffers y
+se activan los flags de error de overflow, sin mandar más mensajes
+se intenta leer mensajes y los buffers de recepcion siguen llenos,
+se requieren > 2 lecturas de buffers para que se indique que los buffers
+estan vacios (usando "READ RX BUFFER")
+->	(...)  This instruction further reduces the SPI
+	overhead by automatically clearing the associated
+	receive flag (RXxIF bit in the CANINTF register) when
+	CS is raised at the end of the command
+
+Mensajes multiples? Único mensaje se recibe en todos los buffers?
+
+Independientemente del envio de mensajes, en pruebas posteriores
+se verificó que la instruccion "READ RX BUFFER" no hacia clear
+de RXxIF
+
+#Problemas similares (no se encontró nada sobre el problema de "READ RX BUFFER")
+https://www.microchip.com/forums/m264862.aspx
+https://www.microchip.com/forums/m261108.aspx
+
+#Errata
+http://ww1.microchip.com/downloads/en/DeviceDoc/80000774A.pdf
+->	"Holding CS low for a long time after an SPI command
+	which initiates a CAN message may keep the CAN
+	transmit request “pending”, causing the CAN message
+	to be repeated."
+	Two Scenarios:
+	1. Generating an “SPI RTS” command while in SPI
+	Mode 11 (Mode 00 is not affected):
+
+Modo SPI utilizado: Mode 00
+
+Solución implementada: Modificar las velocidades de spi.
+
+Ambos problemas solucionados.
+
